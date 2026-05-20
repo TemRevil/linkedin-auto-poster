@@ -2134,7 +2134,8 @@ def _build_profile_md(d: dict) -> str:
 ## Who Am I
 - Name: {g('name')}
 - Title/Role: {g('role')}
-- Industry: {g('industry')}
+- Industry: {g('industry') or g('topic')}
+- Posts about: {g('topic') or g('industry') or 'my industry'}
 - Key skills: {g('skills')}
 - Current company/project: {g('company')}
 - Location: {g('location')}
@@ -2201,6 +2202,8 @@ def api_setup():
             pass
     if data.get("github"):
         current["github_username"] = data["github"].strip()
+    if data.get("topic"):
+        current["content_topic"] = data["topic"].strip()
     if data.get("gmail_method"):
         current["gmail_method"] = data["gmail_method"]
     if data.get("gen_engine"):

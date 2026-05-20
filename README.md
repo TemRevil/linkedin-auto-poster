@@ -1,6 +1,22 @@
-# Linkedin_A01 - AI News Auto-Poster
+# LinkedIn Auto-Poster
 
-Automated LinkedIn posting system that scrapes AI news daily, writes humanized posts tailored to your profile and audience, and posts them after your approval.
+Automated LinkedIn posting system that scrapes news for **your chosen topic**
+(AI, finance, fitness, design — anything), writes humanized posts tailored to
+your profile and audience, and posts them after your approval.
+
+## ⚡ Install with Claude Code (easiest)
+
+If you have [Claude Code](https://claude.com/claude-code), just paste this:
+
+```
+Read https://raw.githubusercontent.com/TemRevil/linkedin-auto-poster/main/SETUP_WITH_CLAUDE.md and set it up for me.
+```
+
+Claude reads [`SETUP_WITH_CLAUDE.md`](SETUP_WITH_CLAUDE.md), then clones the repo,
+installs dependencies, launches the dashboard, and walks you through the
+first-run setup wizard. (Replace the URL with your fork if you renamed the repo.)
+
+Prefer to do it by hand? See [Manual setup](#setup) below.
 
 ## How It Works
 
@@ -8,10 +24,10 @@ Automated LinkedIn posting system that scrapes AI news daily, writes humanized p
 5:00 PM daily
     |
     v
-[1] Scrape AI news (RSS feeds + web + Gmail newsletters)
+[1] Scrape news for YOUR topic (RSS feeds + web + Gmail newsletters)
     |
     v
-[2] Pick best topic based on your profile + audience data
+[2] Pick best item based on your profile + audience data
     |
     v
 [3] Generate post -> run through humanizer (removes AI writing patterns)
@@ -127,11 +143,16 @@ The system auto-detects when a post needs an image and provides links to:
 - **Pexels** - free, good variety
 - **Pixabay** - free, large library
 
-## News Sources
+## News Sources & Topic
 
-- RSS: TechCrunch AI, VentureBeat AI, The Decoder, Hacker News, MarkTechPost
-- Web: Google News search via Playwright
-- Gmail: AI newsletter emails (optional, requires gmail_setup.py)
+The default feeds cover AI/tech, but **you choose the niche**. In
+**Settings → General → Content focus** set any topic (e.g. "personal finance",
+"climate", "indie games") and optionally paste your own **Custom RSS feeds**
+(one URL per line). Discovery, web search, and Gmail scoping all follow it.
+
+- RSS: your custom feeds, or the built-in AI/tech defaults
+- Web: search queries derived from your topic (via Playwright)
+- Gmail: newsletter emails scoped to your topic (optional)
 
 ## Audience Data
 

@@ -32,6 +32,12 @@ DEFAULT_SETTINGS = {
     "gen_engine": "claude_code",     # "claude_code" | "anthropic_api"
     "anthropic_api_key": "",         # Only needed when gen_engine = anthropic_api
     "anthropic_model": "claude-sonnet-4-20250514",
+
+    # ─── Content niche (post about ANYTHING, not just AI/tech) ───────────────
+    "content_topic": "AI and technology",  # free text — your niche / what you post about
+    "custom_feeds": [],              # list of RSS URLs; empty = built-in defaults below
+    "custom_search_queries": [],     # list of web-search queries; empty = derived from topic
+    "setup_completed": False,        # first-run wizard flag
 }
 
 
@@ -149,6 +155,51 @@ IMAGE_SOURCES = {
     "pixabay": "https://pixabay.com/images/search/{query}/",
 }
 
-# Gmail label to watch for AI newsletters
+# Gmail label to watch for newsletters
 GMAIL_AI_LABELS = ["AI News", "Newsletters", "INBOX"]
 GMAIL_SEARCH_QUERY = "subject:(AI OR artificial intelligence OR LLM OR GPT OR Claude) newer_than:1d"
+
+
+# ─── Topic resolution (lets the user post about ANY niche) ───────────────────
+# These read the user's settings and fall back to the AI/tech defaults above,
+# so an unconfigured install behaves exactly as before.
+
+def get_content_topic() -> str:
+    return (get_setting("content_topic", "AI and technology") or "AI and technology").strip()
+
+
+def get_news_feeds() -> list:
+    """User's custom RSS feeds if set, else the built-in AI/tech feeds."""
+    custom = get_setting("custom_feeds", []) or []
+    custom = [str(u).strip() for u in custom if str(u).strip()]
+    return custom if custom else AI_NEWS_FEEDS
+
+
+def get_search_queries() -> list:
+    """User's custom web-search queries if set, else queries derived from the topic."""
+    custom = get_setting("custom_search_queries", []) or []
+    custom = [str(q).strip() for q in custom if str(q).strip()]
+    if custom:
+        return custom
+    topic = get_content_topic()
+    if topic.lower() in ("ai and technology", "ai", "tech", "technology"):
+        return AI_SEARCH_QUERIES
+    return [
+        f"{topic} news today",
+        f"{topic} latest news",
+        f"{topic} trends 2026",
+        f"{topic} update",
+    ]
+
+
+def get_gmail_search_query() -> str:
+    """Gmail search scoped to the user's topic (falls back to the AI query)."""
+    topic = get_content_topic()
+    if topic.lower() in ("ai and technology", "ai", "tech", "technology"):
+        return GMAIL_SEARCH_QUERY
+    # Build a loose subject filter from the topic words
+    words = [w for w in topic.replace("/", " ").replace(",", " ").split() if len(w) > 2]
+    if not words:
+        return GMAIL_SEARCH_QUERY
+    subject = " OR ".join(words[:6])
+    return f"subject:({subject}) newer_than:3d"

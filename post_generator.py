@@ -359,11 +359,13 @@ def _run_claude_code(output_path: Path, post_type: str) -> bool:
     gmail_hint = ""
     gmail_method = get_setting("gmail_method", "none")
     if gmail_method == "claude_mcp":
+        from config import get_content_topic
+        topic = get_content_topic()
         _step("gmail", "Connecting to Gmail for newsletter content...")
         gmail_hint = (
             " You also have access to the user's Gmail via MCP. "
-            "Search Gmail for AI newsletters from the past week related to the article topic. "
-            "Use the Gmail search tool with queries like 'AI newsletter' or the article topic. "
+            f"Search Gmail for {topic} newsletters from the past week related to the article topic. "
+            f"Use the Gmail search tool with queries like '{topic} newsletter' or the article topic. "
             "Include any relevant insights from newsletters you find."
         )
 

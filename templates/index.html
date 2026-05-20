@@ -1647,6 +1647,19 @@ details summary:hover { color: var(--accent); }
         <div class="acct-section" id="acct-general">
             <div class="card" style="padding:20px">
                 <div class="settings-section">
+                    <h4>Content focus</h4>
+                    <div class="settings-row">
+                        <label for="set-content-topic">What do you post about?</label>
+                        <input type="text" id="set-content-topic" placeholder="e.g. AI and technology, personal finance, fitness" style="min-width:240px">
+                    </div>
+                    <p style="font-size:11px;color:var(--text-tertiary);margin-top:2px;line-height:1.5">Drives discovery, search, and Gmail topics. Posts also follow your <b>profile</b> &amp; <b>voice</b>. Not just AI — set any niche.</p>
+                    <div class="settings-row" style="align-items:flex-start">
+                        <label for="set-custom-feeds">Custom RSS feeds</label>
+                        <textarea id="set-custom-feeds" rows="3" placeholder="One feed URL per line. Leave empty to use the built-in AI/tech feeds." style="min-width:240px;flex:1;max-width:340px;padding:8px 10px;background:var(--bg-secondary);border:1px solid var(--border);border-radius:var(--r-xs);color:var(--text-primary);font-size:12px;font-family:var(--font-mono);outline:none;resize:vertical"></textarea>
+                    </div>
+                    <p style="font-size:11px;color:var(--text-tertiary);margin-top:2px">Find RSS feeds for your niche and paste them here — discovery will pull from them.</p>
+                </div>
+                <div class="settings-section">
                     <h4>Daily Schedule</h4>
                     <div class="settings-row">
                         <label for="set-disc-time">Discovery (news scrape)</label>
@@ -1918,6 +1931,7 @@ details summary:hover { color: var(--accent); }
             <div class="setup-step" data-step="1">
                 <h2>Tell us about you</h2>
                 <p>This builds your voice profile so posts sound like you. You can edit all of it later in Settings.</p>
+                <div class="setup-field"><label for="su-topic">What do you post about?</label><input type="text" id="su-topic" placeholder="e.g. AI &amp; tech, personal finance, fitness, design"><div class="hint">Your niche — drives news discovery and the angle of your posts. Anything works, not just AI.</div></div>
                 <div class="setup-row2">
                     <div class="setup-field"><label for="su-name">Your name</label><input type="text" id="su-name" placeholder="e.g. Jordan Lee"></div>
                     <div class="setup-field"><label for="su-role">Role / title</label><input type="text" id="su-role" placeholder="e.g. Frontend Developer"></div>
@@ -2766,6 +2780,8 @@ document.addEventListener('click', (e) => {
 async function loadSettings(){
     try {
         const s = await api('/api/settings');
+        document.getElementById('set-content-topic').value = s.content_topic || '';
+        document.getElementById('set-custom-feeds').value = (Array.isArray(s.custom_feeds) ? s.custom_feeds.join('\n') : '');
         document.getElementById('set-disc-time').value = s.discovery_time || '15:00';
         document.getElementById('set-gen-time').value = s.generation_time || '17:00';
         csSetValue('set-default-type-wrap', s.default_post_type || 'news');
@@ -2787,6 +2803,8 @@ async function loadSettings(){
 }
 async function saveSettings(){
     const payload = {
+        content_topic: document.getElementById('set-content-topic').value.trim(),
+        custom_feeds: document.getElementById('set-custom-feeds').value.split('\n').map(s=>s.trim()).filter(Boolean),
         discovery_time: document.getElementById('set-disc-time').value,
         generation_time: document.getElementById('set-gen-time').value,
         default_post_type: document.getElementById('set-default-type').value,
@@ -3251,6 +3269,7 @@ async function setupNext(){
     if(_setupStep === 1){
         // Save the details
         const payload = {
+            topic: document.getElementById('su-topic').value,
             name: document.getElementById('su-name').value,
             role: document.getElementById('su-role').value,
             industry: document.getElementById('su-industry').value,

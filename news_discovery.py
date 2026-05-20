@@ -1,6 +1,6 @@
 """
 News Discovery Agent — runs at 3 PM daily.
-Scrapes AI/tech news and stores them as swipeable discovery cards in SQLite.
+Scrapes news for your configured topic and stores them as swipeable discovery cards in SQLite.
 User swipes right (like) or left (dislike) to train the preference algorithm.
 
 Scoring uses:

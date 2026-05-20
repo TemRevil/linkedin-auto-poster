@@ -15,14 +15,15 @@ from playwright.async_api import async_playwright
 
 from config import (
     AI_NEWS_FEEDS, RESEARCH_FEEDS, AI_SEARCH_QUERIES, POSTS_DIR, LOGS_DIR,
-    GMAIL_SEARCH_QUERY, get_setting
+    GMAIL_SEARCH_QUERY, get_setting,
+    get_news_feeds, get_search_queries, get_gmail_search_query,
 )
 
 
 def scrape_rss_feeds() -> list[dict]:
-    """Pull latest AI news from RSS feeds."""
+    """Pull latest news from the configured RSS feeds (user topic or AI default)."""
     articles = []
-    for feed_url in AI_NEWS_FEEDS:
+    for feed_url in get_news_feeds():
         try:
             feed = feedparser.parse(feed_url)
             for entry in feed.entries[:5]:
@@ -182,7 +183,7 @@ async def scrape_web_search() -> list[dict]:
             browser = await p.chromium.launch(headless=True)
             page = await browser.new_page()
 
-            for query in AI_SEARCH_QUERIES[:2]:
+            for query in get_search_queries()[:2]:
                 try:
                     search_url = f"https://www.google.com/search?q={query}&tbm=nws"
                     await page.goto(search_url, wait_until="domcontentloaded")
@@ -239,7 +240,7 @@ def scrape_gmail_newsletters(gmail_service=None) -> list[dict]:
 
         results = service.users().messages().list(
             userId="me",
-            q=GMAIL_SEARCH_QUERY,
+            q=get_gmail_search_query(),
             maxResults=10
         ).execute()
 
