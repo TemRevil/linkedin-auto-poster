@@ -224,7 +224,7 @@ def scrape_gmail_newsletters(gmail_service=None) -> list[dict]:
     Falls back gracefully if not configured.
     """
     articles = []
-    creds_file = Path(__file__).parent / "auth_state" / "gmail_token.json"
+    creds_file = Path(__file__).resolve().parent.parent / "auth_state" / "gmail_token.json"
 
     if not creds_file.exists():
         print("  [Gmail] No credentials found. Run gmail_setup.py first.")

@@ -1,7 +1,7 @@
 # Set up LinkedIn Auto-Poster (instructions for Claude Code)
 
 > **How to use this file:** copy its link and paste it to Claude Code like:
-> *"Read https://raw.githubusercontent.com/TemRevil/linkedin-auto-poster/main/SETUP_WITH_CLAUDE.md and set this up for me."*
+> *"Read https://raw.githubusercontent.com/TemRevil/linkedin-auto-poster/main/docs/SETUP_WITH_CLAUDE.md and set this up for me."*
 > Claude will follow the steps below to clone, install, and launch the app.
 
 ---
@@ -40,12 +40,12 @@ python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 python -m playwright install chromium
 ```
-If `python run.py setup` exists it does the pip + playwright step in one go — you may run that instead.
+Or run `python src/run.py setup`, which does the pip + playwright step in one go.
 
 ### 3. Start the dashboard
 ```bash
-python approval_server.py
-# or:  python run.py approve
+python src/approval_server.py
+# or:  python src/run.py approve
 ```
 Then open **http://127.0.0.1:5555** in a browser. A **first-run setup wizard**
 appears — walk the user through it (their name, role, **what they post about**,
@@ -55,7 +55,7 @@ shared; all personal files are gitignored.
 ### 4. Connect LinkedIn (one-time)
 In the dashboard: **Settings → Accounts → Login**. A browser opens; the user
 signs in once and the session is saved to `auth_state/` (gitignored).
-CLI alternative: `python run.py login`.
+CLI alternative: `python src/run.py login`.
 
 ### 5. (Optional) Pick the content niche precisely
 - **Settings → General → Content focus**: free-text topic (e.g. "personal
@@ -84,7 +84,8 @@ account; `OAuth credentials.json` is uploaded in the Accounts tab.
 ## Notes for you (Claude)
 - Do **not** commit or print any secrets. `profile.md`, `settings.json`,
   `connections.*`, `auth_state/`, API keys, and `posts/` are all gitignored.
-- The app reads `config.py` (relative paths) and `settings.json` (created by the
+- Code lives in `src/`; data and configs live at the project root (one level up).
+  The app reads `src/config.py` and the root `settings.json` (created by the
   wizard). Defaults work out of the box for an AI/tech niche.
 - If `playwright` errors on launch, re-run `python -m playwright install chromium`.
-- Default port is `5555` (`config.py → APPROVAL_PORT`).
+- Default port is `5555` (`src/config.py → APPROVAL_PORT`).

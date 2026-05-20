@@ -13,8 +13,9 @@ To set up Gmail access:
 import sys
 from pathlib import Path
 
-CREDS_FILE = Path(__file__).parent / "credentials.json"
-TOKEN_FILE = Path(__file__).parent / "auth_state" / "gmail_token.json"
+_ROOT = Path(__file__).resolve().parent.parent  # project root (src/ is one level down)
+CREDS_FILE = _ROOT / "credentials.json"
+TOKEN_FILE = _ROOT / "auth_state" / "gmail_token.json"
 
 
 def setup_gmail():

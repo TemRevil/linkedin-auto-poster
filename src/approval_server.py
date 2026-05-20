@@ -20,7 +20,7 @@ from config import (
     ANTHROPIC_API_KEY, SETTINGS_FILE, DEFAULT_SETTINGS, save_settings, get_setting,
 )
 
-app = Flask(__name__)
+app = Flask(__name__, template_folder=str(BASE_DIR / "templates"))
 
 CONNECTIONS_FILE = BASE_DIR / "connections.toml"
 CONNECTIONS_JSON = BASE_DIR / "connections.json"
@@ -866,7 +866,7 @@ def _do_gmail_login(filename: str):
         import subprocess
 
         # Run gmail_setup.py with --output flag to specify token filename
-        setup_script = BASE_DIR / "gmail_setup.py"
+        setup_script = BASE_DIR / "src" / "gmail_setup.py"
         if not setup_script.exists():
             raise FileNotFoundError(f"gmail_setup.py not found at {setup_script}")
 
@@ -2185,7 +2185,7 @@ def api_setup():
 
     # 2. Seed my_past_posts.md from the example template if it doesn't exist yet
     past_posts_file = BASE_DIR / "my_past_posts.md"
-    example_pp = BASE_DIR / "my_past_posts.example.md"
+    example_pp = BASE_DIR / "examples" / "my_past_posts.example.md"
     if not past_posts_file.exists() and example_pp.exists():
         try:
             past_posts_file.write_text(example_pp.read_text(encoding="utf-8"), encoding="utf-8")

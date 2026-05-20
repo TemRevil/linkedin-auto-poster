@@ -9,10 +9,10 @@ your profile and audience, and posts them after your approval.
 If you have [Claude Code](https://claude.com/claude-code), just paste this:
 
 ```
-Read https://raw.githubusercontent.com/TemRevil/linkedin-auto-poster/main/SETUP_WITH_CLAUDE.md and set it up for me.
+Read https://raw.githubusercontent.com/TemRevil/linkedin-auto-poster/main/docs/SETUP_WITH_CLAUDE.md and set it up for me.
 ```
 
-Claude reads [`SETUP_WITH_CLAUDE.md`](SETUP_WITH_CLAUDE.md), then clones the repo,
+Claude reads [`docs/SETUP_WITH_CLAUDE.md`](docs/SETUP_WITH_CLAUDE.md), then clones the repo,
 installs dependencies, launches the dashboard, and walks you through the
 first-run setup wizard. (Replace the URL with your fork if you renamed the repo.)
 
@@ -51,22 +51,22 @@ copy the templates manually (`profile.example.md` → `profile.md`,
 
 ```bash
 # 1. Install dependencies
-python run.py setup
+python src/run.py setup
 
 # 2. Start the dashboard and complete the first-run setup wizard
-python run.py approve        # opens http://127.0.0.1:5555
+python src/run.py approve        # opens http://127.0.0.1:5555
 
 # 3. Login to LinkedIn (one-time, saves session) — also doable from the UI
-python run.py login
+python src/run.py login
 
 # 4. Scrape your connections for audience targeting
-python run.py connections
+python src/run.py connections
 
 # 5. Schedule the daily task (run PowerShell as admin)
-.\schedule_task.ps1          # or .\schedule_task.bat
+.\schedule_task.ps1              # or .\schedule_task.bat
 
 # 6. (Optional) Connect Gmail for newsletter scraping
-python gmail_setup.py
+python src/gmail_setup.py
 ```
 
 > **Privacy:** your profile, past posts, connections, sessions, API keys, and
@@ -74,45 +74,52 @@ python gmail_setup.py
 
 ## Commands
 
+> All commands run from the project root. `src/run.py` is the entry point.
+
 | Command | What it does |
 |---|---|
-| `python run.py setup` | Install all dependencies (pip + playwright) |
-| `python run.py login` | Open browser to login to LinkedIn (one-time) |
-| `python run.py connections` | Scrape all your LinkedIn connections to TOML |
-| `python run.py analyze` | Re-analyze existing connections data |
-| `python run.py scrape` | Scrape AI news only (no post generation) |
-| `python run.py generate` | Scrape news + generate a post draft |
-| `python run.py approve` | Open the approval web page |
-| `python run.py post` | Post all approved drafts to LinkedIn |
-| `python run.py full` | Full pipeline (scrape + generate + approve + post) |
-| `python run.py test` | Test run (scrape + generate + open approval page) |
-| `python run.py status` | Show system status (session, drafts, etc.) |
+| `python src/run.py setup` | Install all dependencies (pip + playwright) |
+| `python src/run.py login` | Open browser to login to LinkedIn (one-time) |
+| `python src/run.py connections` | Scrape all your LinkedIn connections to TOML |
+| `python src/run.py analyze` | Re-analyze existing connections data |
+| `python src/run.py scrape` | Scrape news only (no post generation) |
+| `python src/run.py generate` | Scrape news + generate a post draft |
+| `python src/run.py approve` | Open the approval web page |
+| `python src/run.py post` | Post all approved drafts to LinkedIn |
+| `python src/run.py full` | Full pipeline (scrape + generate + approve + post) |
+| `python src/run.py test` | Test run (scrape + generate + open approval page) |
+| `python src/run.py status` | Show system status (session, drafts, etc.) |
 
 ## File Structure
 
 ```
-Linkedin_A01/
-  run.py                  # Master entry point (all commands)
-  config.py               # Settings (time, ports, feeds, image sources)
-  profile.example.md      # Template — copied to profile.md by the setup wizard
-  profile.md              # Your profile, audience, voice (gitignored)
-  connections.toml        # Your LinkedIn connections (gitignored)
-  audience_insights.json  # Audience breakdown from connections
-  news_scraper.py         # Scrapes AI news (RSS + web + Gmail)
-  post_generator.py       # Picks topic, writes post, applies humanizer
-  humanizer.py            # Removes 29 AI writing patterns
-  approval_server.py      # Local HTML approval page + notifications
-  linkedin_poster.py      # Playwright automation to post on LinkedIn
-  scheduler.py            # Orchestrates the daily pipeline
-  connections_scraper.py  # Scrapes LinkedIn connections via search
-  gmail_setup.py          # Optional Gmail API setup
-  schedule_task.ps1       # Windows Task Scheduler (PowerShell)
-  schedule_task.bat       # Windows Task Scheduler (CMD)
-  setup.bat               # One-click dependency installer
-  auth_state/             # Saved LinkedIn + Gmail sessions
-  posts/                  # Draft files (JSON) + raw news data
-  images/                 # Downloaded post images
-  logs/                   # Error screenshots + logs
+linkedin-auto-poster/
+  README.md  LICENSE  requirements.txt  .gitignore
+  _post_context_template.md   # Prompt template for generation
+  setup.bat                   # One-click dependency installer
+  schedule_task.ps1 / .bat    # Windows Task Scheduler (daily 5 PM)
+  setup_scheduled_tasks.bat   # Registers discovery + generation tasks
+
+  src/                        # All Python modules
+    run.py                    #   Master entry point (all commands)
+    config.py                 #   Settings, paths, feeds, topic getters
+    approval_server.py        #   Flask dashboard + JSON API
+    post_generator.py         #   Picks topic, writes post, humanizes
+    humanizer.py              #   Removes AI writing patterns
+    news_scraper.py           #   RSS + web + Gmail scraping
+    news_discovery.py         #   Swipe-card discovery + scoring
+    linkedin_poster.py        #   Playwright automation to post
+    connections_scraper.py    #   Scrapes LinkedIn connections
+    scheduler.py              #   Orchestrates the daily pipeline
+    database.py  builder_posts.py  gmail_setup.py  clean_connections.py
+
+  templates/index.html        # The dashboard UI (single file)
+  examples/                   # *.example.* templates (copied on setup)
+  docs/SETUP_WITH_CLAUDE.md   # Claude Code install runbook
+
+  # Created at runtime, all gitignored:
+  profile.md  my_past_posts.md  settings.json  connections.toml
+  auth_state/  posts/  images/  logs/  discovery.db
 ```
 
 ## Post Strategy

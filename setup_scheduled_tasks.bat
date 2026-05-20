@@ -72,7 +72,7 @@ schtasks /Delete /TN "LinkedinA01_Generate" /F >nul 2>&1
 schtasks /Delete /TN "LinkedinA01_Startup" /F >nul 2>&1
 
 REM --- Create Discovery task (daily news scrape) ---
-schtasks /Create /TN "LinkedinA01_Discovery" /TR "\"%PYTHON_EXE%\" \"%PROJECT_DIR%\scheduler.py\" --discover" /SC DAILY /ST %DISCOVERY_TIME% /RL LIMITED /F
+schtasks /Create /TN "LinkedinA01_Discovery" /TR "\"%PYTHON_EXE%\" \"%PROJECT_DIR%\src\scheduler.py\" --discover" /SC DAILY /ST %DISCOVERY_TIME% /RL LIMITED /F
 
 if errorlevel 1 (
     echo [ERROR] Failed to create discovery task.
@@ -83,7 +83,7 @@ if errorlevel 1 (
 )
 
 REM --- Create Generation task (daily Claude post) ---
-schtasks /Create /TN "LinkedinA01_Generate" /TR "\"%PYTHON_EXE%\" \"%PROJECT_DIR%\scheduler.py\" --generate-via-claude" /SC DAILY /ST %GENERATE_TIME% /RL LIMITED /F
+schtasks /Create /TN "LinkedinA01_Generate" /TR "\"%PYTHON_EXE%\" \"%PROJECT_DIR%\src\scheduler.py\" --generate-via-claude" /SC DAILY /ST %GENERATE_TIME% /RL LIMITED /F
 
 if errorlevel 1 (
     echo [ERROR] Failed to create generation task.
@@ -100,7 +100,7 @@ set "STARTUP_VBS=%STARTUP_DIR%\LinkedinA01_Launcher.vbs"
 
 REM Use a VBS wrapper to launch python silently (no console window)
 > "%STARTUP_VBS%" echo Set WshShell = CreateObject("WScript.Shell")
->> "%STARTUP_VBS%" echo WshShell.Run """%PYTHON_EXE%"" ""%PROJECT_DIR%\_start.py""", 0, False
+>> "%STARTUP_VBS%" echo WshShell.Run """%PYTHON_EXE%"" ""%PROJECT_DIR%\src\_start.py""", 0, False
 
 if exist "%STARTUP_VBS%" (
     echo [OK] Startup launcher installed - dashboard auto-launches on Windows logon

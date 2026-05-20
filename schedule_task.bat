@@ -16,7 +16,7 @@ REM Get this script's directory
 set SCRIPT_DIR=%~dp0
 
 REM Create the scheduled task with full paths
-schtasks /create /tn "LinkedInAutoPoster_A01" /tr "\"%PYTHON_PATH%\" \"%SCRIPT_DIR%scheduler.py\"" /sc daily /st 17:00 /f
+schtasks /create /tn "LinkedInAutoPoster_A01" /tr "\"%PYTHON_PATH%\" \"%SCRIPT_DIR%src\scheduler.py\"" /sc daily /st 17:00 /f
 
 if %errorlevel%==0 (
     echo.
@@ -24,9 +24,9 @@ if %errorlevel%==0 (
     echo   Name: LinkedInAutoPoster_A01
     echo   Schedule: Daily at 5:00 PM
     echo   Python: %PYTHON_PATH%
-    echo   Script: %SCRIPT_DIR%scheduler.py
+    echo   Script: %SCRIPT_DIR%src\scheduler.py
     echo.
-    echo   To test now:  python run.py test
+    echo   To test now:  python src\run.py test
     echo   To remove:    schtasks /delete /tn "LinkedInAutoPoster_A01" /f
     echo   To check:     schtasks /query /tn "LinkedInAutoPoster_A01"
 ) else (

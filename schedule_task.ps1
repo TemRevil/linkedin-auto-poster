@@ -13,7 +13,7 @@ if (-not $pythonPath) {
 }
 
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
-$schedulerPath = Join-Path $scriptDir "scheduler.py"
+$schedulerPath = Join-Path $scriptDir "src\scheduler.py"
 
 # Task 1: Discovery at 3 PM
 $action1 = New-ScheduledTaskAction -Execute $pythonPath -Argument "`"$schedulerPath`" --discover"
@@ -45,8 +45,8 @@ try {
 Write-Host "`n  Python:   $pythonPath" -ForegroundColor DarkGray
 Write-Host "  Script:   $schedulerPath" -ForegroundColor DarkGray
 Write-Host ""
-Write-Host "  To test:  python run.py discover" -ForegroundColor Yellow
-Write-Host "            python run.py test" -ForegroundColor Yellow
+Write-Host "  To test:  python src\run.py discover" -ForegroundColor Yellow
+Write-Host "            python src\run.py test" -ForegroundColor Yellow
 Write-Host ""
 Write-Host "  To remove:" -ForegroundColor DarkGray
 Write-Host "    Unregister-ScheduledTask -TaskName 'LinkedInAutoPoster_Discovery' -Confirm:`$false"

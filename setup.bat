@@ -18,20 +18,20 @@ echo ============================================================
 echo   NEXT STEPS:
 echo ============================================================
 echo.
-echo   1. Fill in your profile:
-echo      Open: profile.md
+echo   1. Start the dashboard and run the first-run setup wizard:
+echo      python src\run.py approve
 echo.
 echo   2. Login to LinkedIn (one-time):
-echo      python linkedin_poster.py --login
+echo      python src\linkedin_poster.py --login
 echo.
 echo   3. (Optional) Setup Gmail for newsletter scraping:
-echo      python gmail_setup.py
+echo      python src\gmail_setup.py
 echo.
 echo   4. Schedule daily runs:
-echo      schedule_task.bat
+echo      setup_scheduled_tasks.bat
 echo.
 echo   5. Or run manually:
-echo      python scheduler.py
+echo      python src\scheduler.py
 echo.
 echo ============================================================
 pause

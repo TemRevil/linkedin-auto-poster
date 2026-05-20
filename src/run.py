@@ -165,10 +165,10 @@ def cmd_status():
     print(f"  LinkedIn session: {'Active' if auth_file.exists() else 'Not logged in'}")
 
     # Connections
-    conn_file = Path(__file__).parent / "connections.json"
+    conn_file = Path(__file__).resolve().parent.parent / "connections.json"
     if conn_file.exists():
         import json
-        with open(conn_file, "r") as f:
+        with open(conn_file, "r", encoding="utf-8") as f:
             conns = json.load(f)
         print(f"  Connections scraped: {len(conns)}")
     else:
@@ -201,7 +201,7 @@ def cmd_status():
     print(f"    Posted: {posted_count}")
 
     # Profile
-    profile_file = Path(__file__).parent / "profile.md"
+    profile_file = Path(__file__).resolve().parent.parent / "profile.md"
     print(f"  Profile configured: {'Yes' if profile_file.exists() else 'No'}")
     print()
 

@@ -3,8 +3,8 @@ import os
 import json
 from pathlib import Path
 
-# Paths
-BASE_DIR = Path(__file__).parent
+# Paths — modules live in src/, so the project root is one level up.
+BASE_DIR = Path(__file__).resolve().parent.parent
 AUTH_DIR = BASE_DIR / "auth_state"
 POSTS_DIR = BASE_DIR / "posts"
 IMAGES_DIR = BASE_DIR / "images"
