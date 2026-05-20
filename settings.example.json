@@ -1,0 +1,16 @@
+{
+  "discovery_time": "15:00",
+  "generation_time": "17:00",
+  "reminder_interval_minutes": 30,
+  "max_cards_per_day": 15,
+  "default_post_type": "news",
+  "allow_robotics": true,
+  "use_research_feeds": true,
+  "auto_open_dashboard": true,
+  "github_username": "",
+  "gmail_method": "none",
+  "gen_engine": "claude_code",
+  "anthropic_api_key": "",
+  "anthropic_model": "claude-sonnet-4-20250514",
+  "setup_completed": false
+}

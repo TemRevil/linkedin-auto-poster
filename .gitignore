@@ -1,0 +1,69 @@
+# ═══════════════════════════════════════════════════════════
+#  PERSONAL DATA — never commit. Use the *.example.* templates.
+# ═══════════════════════════════════════════════════════════
+profile.md
+my_past_posts.md
+settings.json
+preferences.json
+audience_insights.json
+
+# Connections (private contacts)
+connections.json
+connections.toml
+connections_backup.json
+
+# Caches
+_github_cache.json
+gmail_keyword_cache.json
+_post_context.md
+
+# ─── Secrets / auth / sessions ───────────────────────────────
+auth_state/
+credentials.json
+*.credentials.json
+token.json
+*.pem
+.env
+.env.*
+
+# ─── Posts, images, generated content ────────────────────────
+posts/
+images/
+
+# ─── Logs & diagnostics ──────────────────────────────────────
+logs/
+*.log
+
+# ─── Database ────────────────────────────────────────────────
+discovery.db
+*.sqlite
+*.sqlite3
+
+# ─── Local tooling / editor / agent ──────────────────────────
+.claude/
+.vscode/
+.idea/
+*.swp
+*.bak
+
+# ─── Python ──────────────────────────────────────────────────
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+venv/
+env/
+.pytest_cache/
+
+# ─── OS ──────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ═══════════════════════════════════════════════════════════
+#  KEEP these example templates (force-include in case a broad
+#  rule above would otherwise match a future rename).
+# ═══════════════════════════════════════════════════════════
+!*.example.md
+!*.example.json
+!*.example.toml
