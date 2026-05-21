@@ -16,7 +16,6 @@ import requests
 
 from config import BASE_DIR, get_setting
 
-GITHUB_USER = get_setting("github_username", "") or os.environ.get("GITHUB_USERNAME", "")
 GITHUB_API = "https://api.github.com"
 CACHE_FILE = BASE_DIR / "_github_cache.json"
 CACHE_TTL_SECONDS = 1800  # 30 min — don't hammer the API
@@ -60,7 +59,8 @@ def _save_cache(data: dict):
 def fetch_recent_commits(days: int = 14, force_refresh: bool = False) -> list[dict]:
     """Fetch commits from the user's public repos in the last N days.
     Returns a list of {repo, sha, message, date, url, additions, deletions}."""
-    if not GITHUB_USER:
+    github_user = get_setting("github_username", "") or os.environ.get("GITHUB_USERNAME", "")
+    if not github_user:
         print("[Builder] No github_username set in settings. Skipping.")
         return []
     if not force_refresh:
@@ -74,7 +74,7 @@ def fetch_recent_commits(days: int = 14, force_refresh: bool = False) -> list[di
     try:
         # 1) List user's repos
         r = requests.get(
-            f"{GITHUB_API}/users/{GITHUB_USER}/repos",
+            f"{GITHUB_API}/users/{github_user}/repos",
             params={"per_page": 30, "sort": "pushed", "direction": "desc"},
             headers=_headers(),
             timeout=15,
@@ -96,8 +96,8 @@ def fetch_recent_commits(days: int = 14, force_refresh: bool = False) -> list[di
             continue  # Skip forks — only original work
         try:
             r = requests.get(
-                f"{GITHUB_API}/repos/{GITHUB_USER}/{repo_name}/commits",
-                params={"author": GITHUB_USER, "since": since, "per_page": 10},
+                f"{GITHUB_API}/repos/{github_user}/{repo_name}/commits",
+                params={"author": github_user, "since": since, "per_page": 10},
                 headers=_headers(),
                 timeout=15,
             )
