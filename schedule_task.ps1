@@ -42,31 +42,12 @@ try {
     Write-Host "  ERROR (Pipeline): $($_.Exception.Message)" -ForegroundColor Red
 }
 
-# Task 3: Claude Code maintenance at 4 PM
-$maintenanceScript = Join-Path $scriptDir "run_maintenance.ps1"
-$action3 = New-ScheduledTaskAction `
-    -Execute "powershell.exe" `
-    -Argument "-NonInteractive -ExecutionPolicy Bypass -File `"$maintenanceScript`""
-$trigger3 = New-ScheduledTaskTrigger -Daily -At "4:00 PM"
-
-try {
-    Register-ScheduledTask -TaskName "LinkedInAutoPoster_Maintenance" -Action $action3 -Trigger $trigger3 -Settings $settings -Force
-    Write-Host "  [3/3] Maintenance task created!" -ForegroundColor Green
-    Write-Host "        Schedule: Daily at 4:00 PM"
-    Write-Host "        Purpose:  Claude Code fixes next audit bug, commits as TemRevil, pushes to main"
-} catch {
-    Write-Host "  ERROR (Maintenance): $($_.Exception.Message)" -ForegroundColor Red
-}
-
 Write-Host "`n  Python:   $pythonPath" -ForegroundColor DarkGray
 Write-Host "  Script:   $schedulerPath" -ForegroundColor DarkGray
 Write-Host ""
 Write-Host "  To test:  python src\run.py discover" -ForegroundColor Yellow
 Write-Host "            python src\run.py test" -ForegroundColor Yellow
-Write-Host "  To test maintenance manually:" -ForegroundColor Yellow
-Write-Host "            powershell -ExecutionPolicy Bypass -File run_maintenance.ps1" -ForegroundColor Yellow
 Write-Host ""
 Write-Host "  To remove:" -ForegroundColor DarkGray
 Write-Host "    Unregister-ScheduledTask -TaskName 'LinkedInAutoPoster_Discovery' -Confirm:`$false"
 Write-Host "    Unregister-ScheduledTask -TaskName 'LinkedInAutoPoster_Pipeline' -Confirm:`$false"
-Write-Host "    Unregister-ScheduledTask -TaskName 'LinkedInAutoPoster_Maintenance' -Confirm:`$false"
