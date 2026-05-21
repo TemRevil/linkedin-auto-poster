@@ -53,10 +53,18 @@ async def post_to_linkedin(content: str, image_path=None) -> bool:
         return False, {"error": "No saved LinkedIn session — run python linkedin_poster.py --login", "screenshot": None}
 
     async with async_playwright() as p:
-        browser = await p.chromium.launch(headless=True)
+        browser = await p.chromium.launch(
+            headless=True,
+            args=["--disable-blink-features=AutomationControlled"],
+        )
         context = await browser.new_context(
             storage_state=str(auth_file),
             viewport={"width": 1440, "height": 900},
+            user_agent=(
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                "AppleWebKit/537.36 (KHTML, like Gecko) "
+                "Chrome/125.0.0.0 Safari/537.36"
+            ),
         )
         page = await context.new_page()
 
