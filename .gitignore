@@ -46,6 +46,7 @@ discovery.db
 *.swp
 *.bak
 audit.md
+run_maintenance.ps1
 
 # ─── Python ──────────────────────────────────────────────────
 __pycache__/
