@@ -45,6 +45,7 @@ discovery.db
 .idea/
 *.swp
 *.bak
+audit.md
 
 # ─── Python ──────────────────────────────────────────────────
 __pycache__/
