@@ -239,8 +239,15 @@ async def post_to_linkedin(content: str, image_path=None) -> bool:
                     # Wait a moment for the image preview to render
                     await page.wait_for_timeout(2000)
                     done_selectors = [
+                        # Language-agnostic: LinkedIn artdeco primary button (works in all UI languages)
+                        "[role='dialog'] button.artdeco-button--primary",
+                        # Language-agnostic: aria-label matching (set by LinkedIn regardless of display language)
+                        "[role='dialog'] button[aria-label='Done']",
+                        "[role='dialog'] button[aria-label='Next']",
+                        # Text-based fallbacks for English
                         "[role='dialog'] button:has-text('Done')",
                         "[role='dialog'] button:has-text('Next')",
+                        # Text-based fallbacks for Arabic
                         "[role='dialog'] button:has-text('موافق')",
                         "[role='dialog'] button:has-text('التالي')",
                         "[role='dialog'] button:has-text('انتهى')",
