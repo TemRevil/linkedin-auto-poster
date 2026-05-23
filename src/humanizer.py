@@ -66,10 +66,6 @@ def humanize_text(text: str) -> str:
     """Apply humanization rules to clean AI-isms from text."""
     result = text
 
-    # Remove dead giveaways
-    for phrase in DEAD_GIVEAWAYS:
-        result = re.sub(re.escape(phrase), "", result, flags=re.IGNORECASE)
-
     # Replace significance inflation with milder alternatives
     replacements = {
         r"\bgroundbreaking\b": "notable",
