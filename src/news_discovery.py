@@ -426,14 +426,16 @@ def _apply_epsilon_greedy(cards: list[dict]) -> list[dict]:
 
     if remaining:
         explore_cards = random.sample(remaining, min(n_explore, len(remaining)))
-        for card in explore_cards:
-            card["is_exploration"] = 1
-            conn = db.get_conn()
-            conn.execute(
-                "UPDATE discovery_cards SET is_exploration = 1 WHERE id = ?",
-                (card["id"],)
-            )
+        conn = db.get_conn()
+        try:
+            for card in explore_cards:
+                card["is_exploration"] = 1
+                conn.execute(
+                    "UPDATE discovery_cards SET is_exploration = 1 WHERE id = ?",
+                    (card["id"],)
+                )
             conn.commit()
+        finally:
             conn.close()
     else:
         explore_cards = []
