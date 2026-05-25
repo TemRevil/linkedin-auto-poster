@@ -284,7 +284,7 @@ def _is_fresh(published: str, max_days: int = 7) -> bool:
         pub_dt = dateparse(published, fuzzy=True)
         # Make naive if aware
         if pub_dt.tzinfo:
-            pub_dt = pub_dt.replace(tzinfo=None)
+            pub_dt = pub_dt.astimezone().replace(tzinfo=None)
         return (datetime.now() - pub_dt).days <= max_days
     except Exception:
         return True  # Can't parse = keep it
