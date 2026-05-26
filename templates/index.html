@@ -2058,7 +2058,7 @@ function hideLoader(){
     const curEl = document.getElementById('app-loader-current'); if(curEl) curEl.textContent = '';
     if(_loaderTimer){ clearInterval(_loaderTimer); _loaderTimer = null; }
 }
-async function api(path,opts){return(await fetch(path,opts)).json();}
+async function api(path,opts){const r=await fetch(path,opts).catch(e=>{hideLoader();toast('Network error: '+e.message,false);throw e;});if(!r.ok){hideLoader();toast('Request failed ('+r.status+')',false);throw new Error(r.status);}return r.json();}
 
 /* ─── Counter animation (rolling digits) ─── */
 function animateCounter(el, target, delay){
