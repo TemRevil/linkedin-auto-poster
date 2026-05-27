@@ -5,6 +5,7 @@ Supports multi-session management, manual preference editing, and live connectio
 """
 import json
 import os
+import re
 import asyncio
 import threading
 import time
@@ -25,6 +26,8 @@ app = Flask(__name__, template_folder=str(BASE_DIR / "templates"))
 CONNECTIONS_FILE = BASE_DIR / "connections.toml"
 CONNECTIONS_JSON = BASE_DIR / "connections.json"
 INSIGHTS_FILE = BASE_DIR / "audience_insights.json"
+
+_DRAFT_ID_RE = re.compile(r"\A\d{8}_\d{6}\Z")
 
 # Scrape state
 _scrape_lock = threading.Lock()
@@ -107,6 +110,8 @@ def get_all_posts() -> list:
 
 
 def update_draft(draft_id: str, updates: dict):
+    if not _DRAFT_ID_RE.fullmatch(draft_id or ""):
+        return None
     for f in POSTS_DIR.glob(f"draft_{draft_id}.json"):
         with open(f, "r", encoding="utf-8") as fp:
             draft = json.load(fp)
@@ -119,6 +124,8 @@ def update_draft(draft_id: str, updates: dict):
 
 def load_draft(draft_id: str):
     """Read a single draft JSON by id (or None)."""
+    if not _DRAFT_ID_RE.fullmatch(draft_id or ""):
+        return None
     f = POSTS_DIR / f"draft_{draft_id}.json"
     if not f.exists():
         return None
