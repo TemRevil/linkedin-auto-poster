@@ -46,6 +46,8 @@ async def post_to_linkedin(content: str, image_path=None) -> bool:
     else:
         image_paths = [str(image_path)]
     image_paths = [p for p in image_paths if Path(p).exists()]
+    _images_dir = (POSTS_DIR / "images").resolve()
+    image_paths = [p for p in image_paths if str(Path(p).resolve()).startswith(str(_images_dir))]
 
     auth_file = AUTH_DIR / "linkedin.json"
     if not auth_file.exists():
