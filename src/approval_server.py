@@ -355,11 +355,14 @@ def _archive_draft_images(draft: dict) -> int:
     import shutil
     if not draft:
         return 0
+    images_dir = (POSTS_DIR / "images").resolve()
     rejected_dir = POSTS_DIR / "images" / "rejected"
     moved = 0
     for p in draft_images(draft):
         try:
-            src = Path(p)
+            src = Path(p).resolve()
+            if not str(src).startswith(str(images_dir)):
+                continue
             if src.exists():
                 rejected_dir.mkdir(parents=True, exist_ok=True)
                 shutil.move(str(src), str(rejected_dir / src.name))
@@ -473,13 +476,16 @@ def api_remove_image():
         return jsonify({"status": "error", "message": "Draft not found"}), 404
 
     imgs = draft_images(draft)
+    images_dir = (POSTS_DIR / "images").resolve()
     if target:
         target_name = Path(target).name
         kept = []
         for p in imgs:
             if Path(p).name == target_name:
                 try:
-                    Path(p).unlink(missing_ok=True)
+                    resolved = Path(p).resolve()
+                    if str(resolved).startswith(str(images_dir)):
+                        resolved.unlink(missing_ok=True)
                 except Exception:
                     pass
             else:
@@ -489,7 +495,9 @@ def api_remove_image():
     else:
         for p in imgs:
             try:
-                Path(p).unlink(missing_ok=True)
+                resolved = Path(p).resolve()
+                if str(resolved).startswith(str(images_dir)):
+                    resolved.unlink(missing_ok=True)
             except Exception:
                 pass
         imgs = []
