@@ -12,7 +12,7 @@ import time
 import webbrowser
 from datetime import datetime
 from pathlib import Path
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, abort
 
 from config import (
     APPROVAL_HOST, APPROVAL_PORT, POSTS_DIR, REMINDER_INTERVAL_MINUTES,
@@ -28,6 +28,20 @@ CONNECTIONS_JSON = BASE_DIR / "connections.json"
 INSIGHTS_FILE = BASE_DIR / "audience_insights.json"
 
 _DRAFT_ID_RE = re.compile(r"\A\d{8}_\d{6}\Z")
+
+_CSRF_ALLOWED_ORIGINS = {"http://127.0.0.1:5555", "http://localhost:5555"}
+
+
+@app.before_request
+def _check_origin():
+    if request.method in ("POST", "PUT", "DELETE", "PATCH"):
+        origin = request.headers.get("Origin", "")
+        referer = request.headers.get("Referer", "")
+        if origin and origin not in _CSRF_ALLOWED_ORIGINS:
+            abort(403)
+        if not origin and not any(referer.startswith(a) for a in _CSRF_ALLOWED_ORIGINS):
+            abort(403)
+
 
 # Scrape state
 _scrape_lock = threading.Lock()
