@@ -22,6 +22,7 @@ from config import (
 )
 
 app = Flask(__name__, template_folder=str(BASE_DIR / "templates"))
+app.config["MAX_CONTENT_LENGTH"] = 10 * 1024 * 1024  # 10 MB upload limit
 
 CONNECTIONS_FILE = BASE_DIR / "connections.toml"
 CONNECTIONS_JSON = BASE_DIR / "connections.json"
