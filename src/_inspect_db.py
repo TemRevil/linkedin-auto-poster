@@ -27,7 +27,7 @@ print("=" * 70)
 rows = list(conn.execute("SELECT keyword, action FROM swipe_events"))
 weights = {}
 for r in rows:
-    sign = 1 if r["action"] == "like" else -1
+    sign = 1 if r["action"] == "liked" else -1
     weights[r["keyword"]] = weights.get(r["keyword"], 0) + sign
 sorted_w = sorted(weights.items(), key=lambda x: x[1], reverse=True)
 print("\nTop positive:")
