@@ -6,6 +6,7 @@ Supports multi-session management, manual preference editing, and live connectio
 import json
 import os
 import re
+import stat
 import asyncio
 import threading
 import time
@@ -560,6 +561,8 @@ def api_upload_credentials():
     creds_path = BASE_DIR / "credentials.json"
     with open(creds_path, "wb") as out:
         out.write(content)
+    if os.name == "posix":
+        os.chmod(creds_path, stat.S_IRUSR | stat.S_IWUSR)  # 0o600
 
     return jsonify({
         "status": "ok",

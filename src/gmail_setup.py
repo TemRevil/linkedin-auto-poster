@@ -10,6 +10,8 @@ To set up Gmail access:
 5. Download credentials.json and place in this folder
 6. Run this script to authenticate
 """
+import os
+import stat
 import sys
 from pathlib import Path
 
@@ -63,8 +65,9 @@ def setup_gmail():
                 creds = flow.run_local_server(port=0)
 
             TOKEN_FILE.parent.mkdir(exist_ok=True)
-            with open(TOKEN_FILE, "w") as f:
-                f.write(creds.to_json())
+            TOKEN_FILE.write_text(creds.to_json())
+            if os.name == "posix":
+                os.chmod(TOKEN_FILE, stat.S_IRUSR | stat.S_IWUSR)  # 0o600
 
         print("\n  Gmail authenticated successfully!")
         print(f"  Token saved to: {TOKEN_FILE}")
