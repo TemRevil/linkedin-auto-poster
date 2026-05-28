@@ -1416,6 +1416,8 @@ def _run_generate(post_type: str = "news", commit_sha: str = None,
         _gen_step("error", f"Error: {str(e)[:80]}")
         _generate_result = {"status": "error", "error": str(e)}
     finally:
+        import post_generator as _pg
+        _pg._progress_callback = None
         with _generate_lock:
             _generate_running = False
 
