@@ -286,7 +286,8 @@ def _run_post_to_linkedin():
         import traceback; traceback.print_exc()
         _post_result = {"status": "error", "error": str(e), "ended_at": datetime.now().isoformat()}
     finally:
-        _post_running = False
+        with _post_lock:
+            _post_running = False
 
 
 @app.route("/api/post-status")
@@ -636,7 +637,8 @@ def _run_scrape():
     except Exception as e:
         _scrape_result = {"error": str(e), "status": "error"}
     finally:
-        _scrape_running = False
+        with _scrape_lock:
+            _scrape_running = False
 
 
 @app.route("/api/scrape-status")
@@ -688,7 +690,8 @@ def api_deep_scrape():
         except Exception as e:
             _scrape_result = {"error": str(e), "status": "error"}
         finally:
-            _scrape_running = False
+            with _scrape_lock:
+                _scrape_running = False
 
     threading.Thread(target=_run_deep, daemon=True).start()
     return jsonify({
@@ -1218,7 +1221,8 @@ def api_discover_now():
     except Exception as e:
         return jsonify({"message": f"Discovery failed: {str(e)}", "status": "error"}), 500
     finally:
-        _discover_running = False
+        with _discover_lock:
+            _discover_running = False
 
 
 # ─── On-Demand Post Generation (Claude) ───────────────────────────────────
@@ -1409,7 +1413,8 @@ def _run_generate(post_type: str = "news", commit_sha: str = None,
         _gen_step("error", f"Error: {str(e)[:80]}")
         _generate_result = {"status": "error", "error": str(e)}
     finally:
-        _generate_running = False
+        with _generate_lock:
+            _generate_running = False
 
 
 @app.route("/api/generate-status")
@@ -1506,7 +1511,8 @@ def _run_chat_generate(message: str, engine: str = "claude_code"):
         _gen_step("error", f"Error: {str(e)[:80]}")
         _generate_result = {"status": "error", "error": str(e)}
     finally:
-        _generate_running = False
+        with _generate_lock:
+            _generate_running = False
 
 
 _GMAIL_KEYWORDS = (
@@ -2056,7 +2062,8 @@ def _run_regenerate(draft: dict, mode: str):
         _gen_step("error", f"Error: {str(e)[:80]}")
         _generate_result = {"status": "error", "error": str(e)}
     finally:
-        _generate_running = False
+        with _generate_lock:
+            _generate_running = False
 
 
 # ─── Builder Updates (GitHub commits) ────────────────────────────────────────
