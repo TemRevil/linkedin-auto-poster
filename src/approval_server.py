@@ -880,7 +880,7 @@ def api_sessions_authenticate():
 @app.route("/api/sessions/auth-status")
 def api_sessions_auth_status():
     """Report on any in-progress logins so the UI can show spinners."""
-    return jsonify({"logins": _login_progress})
+    return jsonify({"logins": dict(_login_progress)})
 
 
 def _do_gmail_login(filename: str):
