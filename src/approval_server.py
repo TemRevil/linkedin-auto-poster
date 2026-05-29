@@ -2185,10 +2185,15 @@ def api_setup_status():
 def _build_profile_md(d: dict) -> str:
     """Render a profile.md from the wizard's collected fields."""
     def g(k, default=""):
-        return (d.get(k) or default).strip()
+        # Collapse newlines/carriage returns to spaces so a wizard field can't
+        # inject extra markdown lines or fake instructions into profile.md
+        # (which is embedded verbatim in the Claude generation prompt).
+        return " ".join((d.get(k) or default).split())
 
     interests = d.get("interests") or []
-    interest_lines = "\n".join(f"- [x] {i}" for i in interests) or "- [x] AI agents & automation"
+    interest_lines = "\n".join(
+        f"- [x] {' '.join(str(i).split())}" for i in interests
+    ) or "- [x] AI agents & automation"
     return f"""# LinkedIn Profile & Posting Strategy
 
 ## Who Am I
