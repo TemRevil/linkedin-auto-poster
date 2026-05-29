@@ -2011,6 +2011,8 @@ function nav(page){
 
 /* ─── Helpers ────────────────────────────── */
 function esc(t){const d=document.createElement('div');d.textContent=t||'';return d.innerHTML;}
+/* JS-string-literal safe for embedding as an argument inside a double-quoted HTML attribute (e.g. onclick). Returns a quoted literal: JSON.stringify escapes quotes/backslashes/newlines, esc() then HTML-escapes so it can't break out of the attribute. */
+function jstr(v){return esc(JSON.stringify(v==null?'':String(v)));}
 function stripHtml(t){if(!t)return'';const d=document.createElement('div');d.innerHTML=t;let txt=(d.textContent||d.innerText||'').trim();if(!txt){const img=d.querySelector('img[alt]');if(img)txt=img.alt;}return txt;}
 function fmtDate(iso){if(!iso||iso==='Never')return'Never';try{return new Date(iso).toLocaleDateString('en-US',{month:'short',day:'numeric'})}catch{return iso}}
 function toast(msg,ok){const t=document.getElementById('toast');t.textContent=msg;t.className='toast '+(ok?'ok':'err');t.style.display='block';setTimeout(()=>t.style.display='none',2800);}
@@ -2139,21 +2141,21 @@ function renderPostTab(){
             const refsHtml = _buildRefsHtml(p);
             return `<div class="post-card">
                 <div class="post-meta"><span class="badge badge-pending">Pending</span><span>${esc(p.article?.source||'')}</span><span style="margin-left:auto">${fmtDate(p.created_at)}</span></div>
-                <div class="post-body" contenteditable="true" id="ct-${p.id}" oninput="postBodyInput('${p.id}')">${esc(p.post_content||'')}</div>
+                <div class="post-body" contenteditable="true" id="ct-${p.id}" oninput="postBodyInput(${jstr(p.id)})">${esc(p.post_content||'')}</div>
                 <div class="post-edit-hint">Click the post above to edit. Auto-saves as you type.</div>
                 <div class="post-rewrite-bar">
-                    <button class="rw-btn" onclick="rewritePost('${p.id}','shorter')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="4 14 10 14 10 20"/><line x1="3" y1="21" x2="10" y2="14"/></svg>Shorter</button>
-                    <button class="rw-btn" onclick="rewritePost('${p.id}','longer')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="15 3 21 3 21 9"/><line x1="14" y1="10" x2="21" y2="3"/></svg>Longer &amp; detailed</button>
-                    <button class="rw-btn" onclick="rewritePost('${p.id}','regenerate')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>Regenerate</button>
+                    <button class="rw-btn" onclick="rewritePost(${jstr(p.id)},'shorter')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="4 14 10 14 10 20"/><line x1="3" y1="21" x2="10" y2="14"/></svg>Shorter</button>
+                    <button class="rw-btn" onclick="rewritePost(${jstr(p.id)},'longer')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="15 3 21 3 21 9"/><line x1="14" y1="10" x2="21" y2="3"/></svg>Longer &amp; detailed</button>
+                    <button class="rw-btn" onclick="rewritePost(${jstr(p.id)},'regenerate')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>Regenerate</button>
                 </div>
                 ${imgHtml}
                 ${sugg}
                 ${refsHtml}
                 ${p.humanization_report?`<details><summary>Humanization report</summary><div class="report">${esc(p.humanization_report)}</div></details>`:''}
                 <div class="post-actions">
-                    <button class="btn btn-success" onclick="approve('${p.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>Approve</button>
-                    <button class="btn btn-ghost" onclick="saveEdit('${p.id}')">Save Edits</button>
-                    <button class="btn btn-danger" onclick="reject('${p.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>Reject</button>
+                    <button class="btn btn-success" onclick="approve(${jstr(p.id)})"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>Approve</button>
+                    <button class="btn btn-ghost" onclick="saveEdit(${jstr(p.id)})">Save Edits</button>
+                    <button class="btn btn-danger" onclick="reject(${jstr(p.id)})"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>Reject</button>
                 </div>
             </div>`;
         }).join('');
@@ -2168,8 +2170,8 @@ function renderPostTab(){
                 <div class="post-body" style="opacity:0.85">${esc(p.post_content||'')}</div>
                 ${imageSectionHtml(p.id, _imgList(p))}
                 <div class="post-actions">
-                    <button class="btn btn-primary" onclick="retryPost('${p.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>Retry post</button>
-                    <button class="btn btn-ghost" onclick="reject('${p.id}')">Move to Rejected</button>
+                    <button class="btn btn-primary" onclick="retryPost(${jstr(p.id)})"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>Retry post</button>
+                    <button class="btn btn-ghost" onclick="reject(${jstr(p.id)})">Move to Rejected</button>
                 </div>
             </div>`;
         }).join('');
@@ -2330,15 +2332,15 @@ function imageSectionHtml(draftId, paths){
     }
     const n = files.length;
     const slides = files.map((fn,i)=>`<div class="img-slide" data-file="${esc(fn)}"><img src="/image/${esc(fn)}?t=${t}" alt="post image ${i+1}"></div>`).join('');
-    const nav = n>1 ? `<button type="button" class="islider-nav prev" onclick="slideImg('${draftId}',-1)" aria-label="Previous image">‹</button><button type="button" class="islider-nav next" onclick="slideImg('${draftId}',1)" aria-label="Next image">›</button>` : '';
-    const dots = n>1 ? `<div class="islider-dots">${files.map((_,i)=>`<span class="islider-dot${i===0?' active':''}" onclick="goImg('${draftId}',${i})"></span>`).join('')}</div>` : '';
+    const nav = n>1 ? `<button type="button" class="islider-nav prev" onclick="slideImg(${jstr(draftId)},-1)" aria-label="Previous image">‹</button><button type="button" class="islider-nav next" onclick="slideImg(${jstr(draftId)},1)" aria-label="Next image">›</button>` : '';
+    const dots = n>1 ? `<div class="islider-dots">${files.map((_,i)=>`<span class="islider-dot${i===0?' active':''}" onclick="goImg(${jstr(draftId)},${i})"></span>`).join('')}</div>` : '';
     const atMax = n >= 9;
     return `<div class="img-slider" id="imgsec-${draftId}" data-idx="0" data-count="${n}">
         <div class="islider-viewport">
             <div class="islider-track">${slides}</div>
             ${nav}
             <div class="islider-counter">1 / ${n}</div>
-            <button type="button" class="islider-del" onclick="removeCurrentImage('${draftId}')" title="Remove this image" aria-label="Remove this image"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+            <button type="button" class="islider-del" onclick="removeCurrentImage(${jstr(draftId)})" title="Remove this image" aria-label="Remove this image"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
         </div>
         ${dots}
         <div class="islider-actions">
@@ -2668,16 +2670,16 @@ async function loadAccount(){
             : '<span style="color:var(--orange)">○ Not signed in — click Login</span>';
         const actions = [];
         if (!isAuthed) {
-            actions.push(`<button class="btn btn-sm btn-primary" onclick="loginSession('${type}',${s.id},'${esc(s.name)}')">Login</button>`);
+            actions.push(`<button class="btn btn-sm btn-primary" onclick="loginSession(${jstr(type)},${s.id},${jstr(s.name)})">Login</button>`);
         } else {
-            actions.push(`<button class="btn btn-sm btn-ghost" onclick="loginSession('${type}',${s.id},'${esc(s.name)}')" title="Re-authenticate (replaces saved session)">Re-login</button>`);
+            actions.push(`<button class="btn btn-sm btn-ghost" onclick="loginSession(${jstr(type)},${s.id},${jstr(s.name)})" title="Re-authenticate (replaces saved session)">Re-login</button>`);
         }
         if (s.active) {
             actions.push('<span class="status-tag on">Active</span>');
         } else {
-            actions.push(`<button class="btn btn-sm btn-ghost" onclick="activateSession('${type}',${s.id})">Activate</button>`);
+            actions.push(`<button class="btn btn-sm btn-ghost" onclick="activateSession(${jstr(type)},${s.id})">Activate</button>`);
         }
-        actions.push(`<button class="btn btn-sm btn-danger" onclick="removeSession('${type}',${s.id},'${esc(s.name)}')">Remove</button>`);
+        actions.push(`<button class="btn btn-sm btn-danger" onclick="removeSession(${jstr(type)},${s.id},${jstr(s.name)})">Remove</button>`);
         return `<div class="acct-card"><div class="acct-icon ${iconCls}">${iconSvg}</div><div class="acct-info"><div class="acct-name">${esc(s.name)}</div><div class="acct-detail">${detail}</div></div><div class="acct-actions">${actions.join('')}</div></div>`;
     };
 
@@ -3102,7 +3104,7 @@ function _buildRefsHtml(p) {
 
     const uid = 'refs-' + p.id;
     return `<div class="post-refs">
-        <div class="post-refs-toggle" onclick="toggleRefs('${uid}', this)">
+        <div class="post-refs-toggle" onclick="toggleRefs(${jstr(uid)}, this)">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
             References &amp; Sources
         </div>
