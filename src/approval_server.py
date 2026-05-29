@@ -2115,7 +2115,21 @@ def api_settings_save():
                 current.update(json.load(f))
         except Exception:
             pass
-    current.update(data)
+    # Only accept keys that are part of the known settings schema, and clamp
+    # integer fields to a sane minimum so a bad value (e.g. a zero reminder
+    # interval) can't break the scheduler or trigger a busy-loop.
+    INT_FIELDS = {"reminder_interval_minutes", "max_cards_per_day"}
+    clean = {}
+    for key, val in data.items():
+        if key not in DEFAULT_SETTINGS:
+            continue  # ignore unknown keys
+        if key in INT_FIELDS:
+            try:
+                val = max(1, int(val))
+            except (TypeError, ValueError):
+                continue  # skip non-numeric values for integer fields
+        clean[key] = val
+    current.update(clean)
     save_settings(current)
     return jsonify({"status": "ok", "settings": current})
 
