@@ -2290,10 +2290,12 @@ def send_reminder_notification():
 
 def reminder_loop():
     while True:
-        time.sleep(REMINDER_INTERVAL_MINUTES * 60)
         pending = get_pending_posts()
         if pending:
             send_reminder_notification()
+        # Clamp to a minimum of 60s so a misconfigured interval of 0 cannot
+        # spin into an unbounded busy-loop hammering the database.
+        time.sleep(max(60, REMINDER_INTERVAL_MINUTES * 60))
 
 
 # ─── Server Entry ────────────────────────────────────────────────────────────
