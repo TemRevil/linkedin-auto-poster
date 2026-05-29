@@ -968,10 +968,14 @@ def _split_post_and_refs(raw: str) -> tuple[str, list[str]]:
     """
     if not raw:
         return "", []
-    marker = "---REFS---"
-    if marker not in raw:
+    # Match the marker tolerantly: 3+ dashes, optional spaces, "REFS", any case
+    # (Claude often normalizes "---REFS---" to "--- REFS ---" or varies casing).
+    marker_re = re.compile(r"-{3,}\s*REFS\s*-{3,}", re.IGNORECASE)
+    matches = list(marker_re.finditer(raw))
+    if not matches:
         return raw.strip(), []
-    body, _, tail = raw.rpartition(marker)
+    last = matches[-1]  # split on the last marker, matching prior rpartition behavior
+    body, tail = raw[:last.start()], raw[last.end():]
     refs: list[str] = []
     for line in tail.splitlines():
         line = line.strip()
