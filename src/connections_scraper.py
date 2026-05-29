@@ -376,11 +376,22 @@ def analyze_audience(connections=None):
         ],
     }
 
+    # data_ai needs word-boundary matching so headlines that start or end with
+    # "AI"/"ML" (e.g. "AI Engineer", "Lead, ML") are not missed by the
+    # surrounding-space keywords " ai " / "ml ".
+    data_ai_re = re.compile(
+        r"\b(?:ai|ml|data|machine\s*learning|artificial\s*intelligence|"
+        r"analyst|scientist|nlp|deep\s*learning)\b"
+    )
     for c in connections:
         h = c.get("headline", "").lower()
         found = False
         for cat, words in kw.items():
-            if any(w in h for w in words):
+            if cat == "data_ai":
+                matched = bool(data_ai_re.search(h))
+            else:
+                matched = any(w in h for w in words)
+            if matched:
                 cats[cat].append(c)
                 found = True
                 break
