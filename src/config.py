@@ -65,8 +65,12 @@ def get_setting(key: str, default=None):
 def save_settings(settings: dict) -> None:
     """Persist settings to settings.json (merges with defaults)."""
     merged = {**DEFAULT_SETTINGS, **settings}
-    with open(SETTINGS_FILE, "w", encoding="utf-8") as f:
+    # Atomic write: serialize to a temp file then replace, so a crash or
+    # Ctrl-C mid-write can never leave settings.json truncated/empty.
+    tmp = SETTINGS_FILE.with_suffix(".tmp")
+    with open(tmp, "w", encoding="utf-8") as f:
         json.dump(merged, f, indent=2, ensure_ascii=False)
+    tmp.replace(SETTINGS_FILE)
 
 
 # ─── Scheduling (kept for backward compat — prefer get_setting()) ────────────

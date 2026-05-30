@@ -495,15 +495,19 @@ async def scrape_profiles(max_count: int = 0):
 
             # Save progress every 25 profiles
             if (i + 1) % 25 == 0:
-                with open(CONNECTIONS_FILE, "w", encoding="utf-8") as f:
+                tmp = CONNECTIONS_FILE.with_suffix(".tmp")
+                with open(tmp, "w", encoding="utf-8") as f:
                     json.dump(connections, f, indent=2, ensure_ascii=False)
+                tmp.replace(CONNECTIONS_FILE)
                 print(f"  [Progress saved: {i+1}/{total}]")
 
         await browser.close()
 
-    # Final save
-    with open(CONNECTIONS_FILE, "w", encoding="utf-8") as f:
+    # Final save (atomic: temp file + replace)
+    tmp = CONNECTIONS_FILE.with_suffix(".tmp")
+    with open(tmp, "w", encoding="utf-8") as f:
         json.dump(connections, f, indent=2, ensure_ascii=False)
+    tmp.replace(CONNECTIONS_FILE)
 
     print(f"\n[Scrape] Done! Updated {updated} profiles ({errors} errors)")
 

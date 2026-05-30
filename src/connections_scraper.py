@@ -311,8 +311,10 @@ async def scrape_connections(session_file=None):
 
     if connections:
         save_as_toml(connections, CONNECTIONS_FILE)
-        with open(CONNECTIONS_JSON, "w", encoding="utf-8") as f:
+        tmp = CONNECTIONS_JSON.with_suffix(".tmp")
+        with open(tmp, "w", encoding="utf-8") as f:
             json.dump(connections, f, indent=2, ensure_ascii=False)
+        tmp.replace(CONNECTIONS_JSON)
         print(f"[Connections] Saved: {CONNECTIONS_FILE.name}")
 
     return connections

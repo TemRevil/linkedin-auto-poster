@@ -132,8 +132,11 @@ def update_draft(draft_id: str, updates: dict):
         with open(f, "r", encoding="utf-8") as fp:
             draft = json.load(fp)
         draft.update(updates)
-        with open(f, "w", encoding="utf-8") as fp:
+        # Atomic write: temp file + replace so a crash can't corrupt the draft.
+        tmp = f.with_suffix(".tmp")
+        with open(tmp, "w", encoding="utf-8") as fp:
             json.dump(draft, fp, indent=2, ensure_ascii=False)
+        tmp.replace(f)
         return draft
     return None
 
