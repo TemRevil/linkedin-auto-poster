@@ -7,13 +7,12 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent.parent
 AUTH_DIR = BASE_DIR / "auth_state"
 POSTS_DIR = BASE_DIR / "posts"
-IMAGES_DIR = BASE_DIR / "images"
 LOGS_DIR = BASE_DIR / "logs"
 PROFILE_FILE = BASE_DIR / "profile.md"
 SETTINGS_FILE = BASE_DIR / "settings.json"
 
 # Ensure directories exist
-for d in (POSTS_DIR, IMAGES_DIR, LOGS_DIR, AUTH_DIR):
+for d in (POSTS_DIR, LOGS_DIR, AUTH_DIR):
     d.mkdir(exist_ok=True)
 
 # ─── Default settings (overridable via settings.json) ────────────────────────

@@ -6,7 +6,7 @@ from datetime import datetime
 from pathlib import Path
 from playwright.async_api import async_playwright
 
-from config import AUTH_DIR, POSTS_DIR, IMAGES_DIR
+from config import AUTH_DIR, POSTS_DIR
 
 
 async def login_and_save_session():
