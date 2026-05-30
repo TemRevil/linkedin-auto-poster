@@ -3079,7 +3079,8 @@ function _buildRefsHtml(p) {
         const srcIcon = art.type === 'gmail' ? _STEP_ICONS.gmail : (art.type === 'custom' ? _STEP_ICONS.topic : _STEP_ICONS.article);
         items += `<div class="post-ref-item"><span class="ref-icon">${srcIcon}</span><span>${esc(art.title)}</span></div>`;
         if (art.link) {
-            items += `<div class="post-ref-item"><span class="ref-icon">${_STEP_ICONS.search}</span><a href="${esc(art.link)}" target="_blank">${esc(art.link.length > 60 ? art.link.substring(0,60)+'...' : art.link)}</a></div>`;
+            const safeLink = /^https?:\/\//i.test(art.link) ? art.link : '#';
+            items += `<div class="post-ref-item"><span class="ref-icon">${_STEP_ICONS.search}</span><a href="${esc(safeLink)}" target="_blank">${esc(art.link.length > 60 ? art.link.substring(0,60)+'...' : art.link)}</a></div>`;
         }
         if (art.source && art.source !== 'Custom topic') {
             items += `<div class="post-ref-item"><span class="ref-icon" style="opacity:0"></span><span>via ${esc(art.source)}</span></div>`;
