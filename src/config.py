@@ -48,8 +48,8 @@ def _load_settings() -> dict:
                 user_settings = json.load(f)
             merged = {**DEFAULT_SETTINGS, **user_settings}
             return merged
-        except Exception:
-            pass
+        except Exception as e:
+            print(f"[Config] WARNING: Could not load {SETTINGS_FILE.name} ({e}). Using defaults.")
     return dict(DEFAULT_SETTINGS)
 
 
