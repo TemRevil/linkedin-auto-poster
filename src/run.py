@@ -187,7 +187,7 @@ def cmd_status():
     approved_count = 0
     posted_count = 0
     for f in pending:
-        with open(f, "r") as fp:
+        with open(f, "r", encoding="utf-8") as fp:
             d = json.load(fp)
             if d["status"] == "pending_approval":
                 pending_count += 1
