@@ -1842,7 +1842,7 @@ Output ONLY the post text. No preamble, no explanation. Just the LinkedIn post c
 def _extract_hashtags(text: str) -> list:
     """Pull hashtags from post text."""
     import re
-    return re.findall(r"#\w+", text)[:8]
+    return re.findall(r"#\w+", text)[:5]
 
 
 # ─── Regenerate / Rewrite Post ─────────────────────────────────────────────
