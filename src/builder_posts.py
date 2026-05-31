@@ -80,7 +80,10 @@ def fetch_recent_commits(days: int = 14, force_refresh: bool = False) -> list[di
             timeout=15,
         )
         if r.status_code != 200:
-            print(f"[Builder] GitHub repos fetch failed: {r.status_code}")
+            if r.status_code == 403 and r.headers.get("X-RateLimit-Remaining") == "0":
+                print("[Builder] GitHub rate limited. Set a GitHub token in settings to increase quota.")
+            else:
+                print(f"[Builder] GitHub repos fetch failed: {r.status_code}")
             return []
         repos = r.json()
     except Exception as e:
