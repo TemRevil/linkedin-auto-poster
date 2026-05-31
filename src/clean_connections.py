@@ -387,7 +387,7 @@ async def scrape_profiles(max_count: int = 0):
     print("[Scrape] This will take a while (1-3 sec per profile to avoid rate-limiting)...")
 
     async with async_playwright() as p:
-        browser = await p.chromium.launch(headless=True)
+        browser = await p.chromium.launch(headless=False)
         ctx = await browser.new_context(
             storage_state=str(session_file),
             user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
