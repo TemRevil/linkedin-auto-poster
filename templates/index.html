@@ -2927,10 +2927,11 @@ function _showSetupGuide(data){
             </div>
         </div>`;
     document.body.appendChild(overlay);
-    const close = () => document.body.removeChild(overlay);
+    function esc2(e){ if(e.key==='Escape'){close();} }
+    const close = () => { document.removeEventListener('keydown', esc2); document.body.removeChild(overlay); };
     overlay.querySelector('[data-act=close]').onclick = close;
     overlay.onclick = e => { if(e.target === overlay) close(); };
-    document.addEventListener('keydown', function esc2(e){ if(e.key==='Escape'){document.removeEventListener('keydown',esc2);close();}});
+    document.addEventListener('keydown', esc2);
 }
 async function removeSession(type, id, name){
     const ok = await uiConfirm(
