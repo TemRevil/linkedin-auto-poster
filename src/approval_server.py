@@ -1856,6 +1856,9 @@ def api_regenerate():
     draft_id = data.get("id")
     mode = data.get("mode", "regenerate")
 
+    if not _DRAFT_ID_RE.fullmatch(draft_id or ""):
+        return jsonify({"status": "error", "message": "invalid draft_id"}), 400
+
     # Load existing draft
     draft_file = POSTS_DIR / f"draft_{draft_id}.json"
     if not draft_file.exists():
