@@ -2461,9 +2461,9 @@ function _showDialog(opts){
         overlay.querySelector('[data-act=cancel]').onclick = () => close(null);
         overlay.querySelector('[data-act=ok]').onclick = () => close(opts.input ? (inputEl.value || '') : true);
         overlay.onclick = e => { if (e.target === overlay) close(null); };
-        document.addEventListener('keydown', function esc(e) {
-            if (e.key === 'Escape') { document.removeEventListener('keydown', esc); close(null); }
-            if (e.key === 'Enter' && opts.input) { document.removeEventListener('keydown', esc); close(inputEl.value || ''); }
+        document.addEventListener('keydown', function onDialogKey(e) {
+            if (e.key === 'Escape') { document.removeEventListener('keydown', onDialogKey); close(null); }
+            if (e.key === 'Enter' && opts.input) { document.removeEventListener('keydown', onDialogKey); close(inputEl.value || ''); }
         });
         if (inputEl) setTimeout(() => inputEl.focus(), 60);
     });
