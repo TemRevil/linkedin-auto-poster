@@ -1912,6 +1912,20 @@ def _run_regenerate(draft: dict, mode: str):
             new_draft = generate_post_draft(article, profile, post_type=post_type)
             if new_draft:
                 _gen_step("done", "New version ready!")
+                # Supersede the original draft so it doesn't linger as a
+                # duplicate pending entry next to the freshly generated one.
+                if new_draft["id"] != draft["id"]:
+                    moved = _archive_draft_images(draft)
+                    sup = {
+                        "status": "rejected",
+                        "rejected_at": datetime.now().isoformat(),
+                        "rejection_reason": "Superseded by regeneration",
+                        "superseded_by": new_draft["id"],
+                    }
+                    if moved:
+                        sup["image_paths"] = []
+                        sup["image_path"] = None
+                    update_draft(draft["id"], sup)
                 update_draft(new_draft["id"], {"references": list(_generate_steps)})
                 _generate_result = {
                     "status": "done",
