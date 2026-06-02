@@ -97,31 +97,41 @@ def _get_active_session(session_type: str) -> dict | None:
 
 # ─── Data Helpers ────────────────────────────────────────────────────────────
 
+def _read_draft_file(f):
+    """Load one draft JSON, returning None (and logging) on a corrupt/half-written file
+    so a single bad draft can't 500 the entire Posts tab."""
+    try:
+        with open(f, "r", encoding="utf-8") as fp:
+            return json.load(fp)
+    except (json.JSONDecodeError, OSError) as e:
+        print(f"[Server] Skipping unreadable draft {f.name}: {e}")
+        return None
+
+
 def get_pending_posts() -> list:
     posts = []
     for f in sorted(POSTS_DIR.glob("draft_*.json"), reverse=True):
-        with open(f, "r", encoding="utf-8") as fp:
-            draft = json.load(fp)
-            if draft.get("status") == "pending_approval":
-                posts.append(draft)
+        draft = _read_draft_file(f)
+        if draft and draft.get("status") == "pending_approval":
+            posts.append(draft)
     return posts
 
 
 def get_history_posts() -> list:
     posts = []
     for f in sorted(POSTS_DIR.glob("draft_*.json"), reverse=True):
-        with open(f, "r", encoding="utf-8") as fp:
-            draft = json.load(fp)
-            if draft.get("status") != "pending_approval":
-                posts.append(draft)
+        draft = _read_draft_file(f)
+        if draft and draft.get("status") != "pending_approval":
+            posts.append(draft)
     return posts[:20]
 
 
 def get_all_posts() -> list:
     posts = []
     for f in sorted(POSTS_DIR.glob("draft_*.json"), reverse=True):
-        with open(f, "r", encoding="utf-8") as fp:
-            posts.append(json.load(fp))
+        draft = _read_draft_file(f)
+        if draft:
+            posts.append(draft)
     return posts
 
 
