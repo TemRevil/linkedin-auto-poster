@@ -7,6 +7,7 @@ import json
 import os
 import re
 import stat
+import sys
 import asyncio
 import threading
 import time
@@ -920,7 +921,7 @@ def _do_gmail_login(filename: str):
             raise FileNotFoundError(f"gmail_setup.py not found at {setup_script}")
 
         proc = subprocess.run(
-            ["python", str(setup_script), "--output", filename],
+            [sys.executable, str(setup_script), "--output", filename],
             cwd=str(BASE_DIR),
             capture_output=True, text=True, timeout=300,
             encoding="utf-8", errors="replace",
