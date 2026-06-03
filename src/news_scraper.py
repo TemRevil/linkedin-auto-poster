@@ -85,7 +85,10 @@ def scrape_ddg_news() -> list[dict]:
         except ImportError:
             from duckduckgo_search import DDGS
 
-        queries = [
+        # Respect the user's configured content_topic. get_search_queries()
+        # returns topic-derived queries (or the AI defaults when no topic is
+        # set), matching every other discovery source.
+        queries = get_search_queries()[:3] or [
             "AI artificial intelligence news",
             "LLM AI agent developer tools",
             "cloud platform engineering AI",
