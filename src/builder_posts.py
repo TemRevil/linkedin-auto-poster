@@ -33,12 +33,15 @@ def _headers() -> dict:
     return h
 
 
-def _load_cache() -> dict | None:
+def _load_cache(github_user: str, days: int) -> dict | None:
     if not CACHE_FILE.exists():
         return None
     try:
         with open(CACHE_FILE, "r", encoding="utf-8") as f:
             data = json.load(f)
+        # Treat as a miss when the cache was built for a different user or window.
+        if data.get("user") != github_user or data.get("days") != days:
+            return None
         cached_at = datetime.fromisoformat(data.get("cached_at", "2000-01-01"))
         if (datetime.now() - cached_at).total_seconds() < CACHE_TTL_SECONDS:
             return data
@@ -64,7 +67,7 @@ def fetch_recent_commits(days: int = 14, force_refresh: bool = False) -> list[di
         print("[Builder] No github_username set in settings. Skipping.")
         return []
     if not force_refresh:
-        cached = _load_cache()
+        cached = _load_cache(github_user, days)
         if cached and "commits" in cached:
             return cached["commits"]
 
@@ -129,7 +132,7 @@ def fetch_recent_commits(days: int = 14, force_refresh: bool = False) -> list[di
 
     # Sort by date desc
     commits.sort(key=lambda c: c.get("date", ""), reverse=True)
-    _save_cache({"commits": commits})
+    _save_cache({"commits": commits, "user": github_user, "days": days})
     print(f"[Builder] Fetched {len(commits)} commits across {len(repos)} repos.")
     return commits
 
