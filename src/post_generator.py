@@ -378,9 +378,21 @@ def _run_claude_code(output_path: Path, post_type: str) -> bool:
         f"{gmail_hint}"
     )
 
+    allowed_tools = ["Read", "Write", "Edit"]
+    if gmail_method == "claude_mcp":
+        # Permit the Gmail MCP tools so Claude can actually act on the hint above;
+        # mirrors approval_server's interactive-generation path.
+        allowed_tools += [
+            "mcp__claude_ai_Gmail",
+            "mcp__claude_ai_Gmail__search_threads",
+            "mcp__claude_ai_Gmail__get_thread",
+            "mcp__claude_ai_Gmail__list_threads",
+            "mcp__claude_ai_Gmail__list_labels",
+        ]
+
     cmd = [
         "claude", "-p",
-        "--allowed-tools", "Read,Write,Edit",
+        "--allowed-tools", ",".join(allowed_tools),
         "--add-dir", str(BASE_DIR),
     ]
 
