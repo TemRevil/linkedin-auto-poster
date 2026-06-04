@@ -2347,9 +2347,15 @@ def reminder_loop():
         pending = get_pending_posts()
         if pending:
             send_reminder_notification()
-        # Clamp to a minimum of 60s so a misconfigured interval of 0 cannot
-        # spin into an unbounded busy-loop hammering the database.
-        time.sleep(max(60, REMINDER_INTERVAL_MINUTES * 60))
+        # Read the interval live each iteration so a Settings change takes
+        # effect without a server restart. Clamp to a minimum of 60s so a
+        # misconfigured interval of 0 cannot spin into an unbounded busy-loop
+        # hammering the database.
+        try:
+            interval_min = int(get_setting("reminder_interval_minutes", REMINDER_INTERVAL_MINUTES))
+        except (TypeError, ValueError):
+            interval_min = REMINDER_INTERVAL_MINUTES
+        time.sleep(max(60, interval_min * 60))
 
 
 # ─── Server Entry ────────────────────────────────────────────────────────────
