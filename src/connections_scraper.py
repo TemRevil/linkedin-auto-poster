@@ -242,8 +242,13 @@ async def scrape_connections(session_file=None):
             all_raw = []
             page_num = 1
             empty_pages = 0
+            seen_urls = set()
+            MAX_PAGES = 100
 
             while empty_pages < 3:
+                if page_num > MAX_PAGES:
+                    print(f"\n[Connections] Reached page cap ({MAX_PAGES}); stopping.")
+                    break
                 url = f"https://www.linkedin.com/search/results/people/?network=%5B%22F%22%5D&page={page_num}"
                 await page.goto(url, wait_until="domcontentloaded", timeout=30000)
                 await page.wait_for_timeout(3000)
@@ -255,11 +260,20 @@ async def scrape_connections(session_file=None):
 
                 batch = await page.evaluate(EXTRACT_JS)
 
-                if batch:
-                    all_raw.extend(batch)
+                # Count only genuinely new profiles: LinkedIn clamps out-of-range
+                # pages to the last valid page, re-serving the same non-empty batch.
+                new_items = []
+                for item in batch or []:
+                    key = item.get("profile_url", "") or item.get("name", "").strip()
+                    if key and key not in seen_urls:
+                        seen_urls.add(key)
+                        new_items.append(item)
+
+                if new_items:
+                    all_raw.extend(new_items)
                     empty_pages = 0
                     sys.stdout.write(
-                        f"\r  Page {page_num}: +{len(batch)} (total: {len(all_raw)})"
+                        f"\r  Page {page_num}: +{len(new_items)} (total: {len(all_raw)})"
                     )
                     sys.stdout.flush()
                 else:
