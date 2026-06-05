@@ -230,6 +230,9 @@ async def discover_news() -> list[dict]:
     kw_weights = db.get_all_keyword_weights()
     src_weights = db.get_all_source_weights()
     interests, blacklist = _parse_profile_interests()
+    # Read once per run; the result is identical for every card, and the cache
+    # file would otherwise be re-opened/parsed up to 25 times below.
+    gmail_prefs = _extract_gmail_preferences()
 
     cards = []
     # Include hour+minute so multiple discovery runs in a day produce
@@ -270,7 +273,7 @@ async def discover_news() -> list[dict]:
         # Calculate score
         score = _calculate_score(
             keywords, source, article_type,
-            kw_weights, src_weights, interests, blacklist
+            kw_weights, src_weights, interests, blacklist, gmail_prefs
         )
 
         card = {
@@ -339,7 +342,8 @@ def _cluster_articles(articles: list[dict]) -> list[dict]:
 
 def _calculate_score(keywords: list, source: str, article_type: str,
                      kw_weights: dict, src_weights: dict,
-                     interests: list, blacklist: list) -> float:
+                     interests: list, blacklist: list,
+                     gmail_prefs: dict | None = None) -> float:
     """Score an article using TF-IDF weighted, time-decayed preferences
     plus audience insights, Gmail signals, and profile interest enforcement."""
     score = 0.0
@@ -402,7 +406,10 @@ def _calculate_score(keywords: list, source: str, article_type: str,
             pass
 
     # ─── Gmail newsletter topic signals (soft 0.3x boost) ────────────────
-    gmail_prefs = _extract_gmail_preferences()
+    # Computed once per discovery run and passed in; fall back to a fresh read
+    # for any standalone caller that doesn't supply it.
+    if gmail_prefs is None:
+        gmail_prefs = _extract_gmail_preferences()
     for kw in keywords:
         kw_lower = kw.lower()
         if kw_lower in gmail_prefs:
