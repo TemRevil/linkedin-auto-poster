@@ -1596,7 +1596,7 @@ details summary:hover { color: var(--accent); }
                 </div>
             </div>
         </div>
-        <div id="scrape-status" style="display:none;padding:10px 14px;margin-bottom:12px;background:var(--accent-dim);border-radius:var(--radius-sm);font-size:13px;color:var(--accent);display:none"></div>
+        <div id="scrape-status" style="display:none;padding:10px 14px;margin-bottom:12px;background:var(--accent-dim);border-radius:var(--r-sm);font-size:13px;color:var(--accent);display:none"></div>
         <div class="toolbar">
             <div class="search-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="text" class="search-box" id="conn-search" placeholder="Search by name, headline, or location..." oninput="debounceSearch()"></div>
             <button class="chip active" data-cat="all" onclick="setCat('all',this)">All</button>
@@ -2649,7 +2649,7 @@ document.getElementById('i-stats').innerHTML=`<div class="stat-card c4"><div cla
 const colors=['#0a84ff','#30d158','#ff9f0a','#ff453a','#32ade6','#ff375f','#636366'];const entries=Object.entries(b).filter(([k])=>k!=='other').sort((a,b2)=>b2[1].count-a[1].count);
 document.getElementById('i-bars').innerHTML=entries.map(([cat,info],i)=>`<div class="bar-group"><div class="bar-head"><span class="bar-name">${cat.replace(/_/g,' ')}</span><span class="bar-val">${info.count} (${info.percentage}%)</span></div><div class="bar-track"><div class="bar-fill" style="width:${Math.min(info.percentage*2,100)}%;background:${colors[i%7]}"></div></div></div>`).join('');
 document.getElementById('i-kw').innerHTML=(data.top_titles||[]).slice(0,15).map(k=>`<span class="kw-tag">${esc(k.word)}<b>${k.count}x</b></span>`).join('');
-document.getElementById('i-recs').innerHTML=(data.recommendations||[]).map(r2=>`<div style="padding:10px 14px;margin-bottom:6px;background:var(--bg-tertiary);border-radius:var(--radius-xs);border-left:3px solid var(--accent);font-size:13px;color:var(--text-secondary)">${esc(r2)}</div>`).join('')||'<p style="color:var(--text-tertiary);font-size:13px">No recommendations yet.</p>';}
+document.getElementById('i-recs').innerHTML=(data.recommendations||[]).map(r2=>`<div style="padding:10px 14px;margin-bottom:6px;background:var(--bg-tertiary);border-radius:var(--r-xs);border-left:3px solid var(--accent);font-size:13px;color:var(--text-secondary)">${esc(r2)}</div>`).join('')||'<p style="color:var(--text-tertiary);font-size:13px">No recommendations yet.</p>';}
 
 /* ─── Account (multi-session + prefs mgmt) ── */
 async function loadAccount(){
@@ -2920,7 +2920,7 @@ function _showSetupGuide(data){
             <h3 class="ui-dialog-title" style="color:var(--orange)">Setup Required</h3>
             <p class="ui-dialog-message">${esc(data.message || '')}</p>
             <ol style="padding-left:20px;font-size:13px;color:var(--text-primary);margin:12px 0">${steps}</ol>
-            ${data.note ? `<p style="font-size:11px;color:var(--text-tertiary);margin-top:12px;padding:8px 10px;background:var(--bg-tertiary);border-radius:var(--radius-xs)">${esc(data.note)}</p>` : ''}
+            ${data.note ? `<p style="font-size:11px;color:var(--text-tertiary);margin-top:12px;padding:8px 10px;background:var(--bg-tertiary);border-radius:var(--r-xs)">${esc(data.note)}</p>` : ''}
             <div class="ui-dialog-actions">
                 <button class="btn btn-ghost" data-act="close">Got it</button>
                 <button class="btn btn-primary" data-act="open" onclick="window.open('https://console.cloud.google.com/','_blank')">Open Google Cloud</button>
