@@ -2561,7 +2561,7 @@ async function swipeAction(action){
     if(dir>0&&lo)lo.style.opacity=1; if(dir<0&&dl)dl.style.opacity=1;
     setTimeout(()=>doSwipe(action),320);
 }
-async function doSwipe(action){if(!discCards.length)return;const card=discCards.shift();await api('/api/swipe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:card.id,action})});renderCards();const stats=await api('/api/discovery-stats');document.getElementById('disc-stats').innerHTML=`<span>Liked: <b style="color:var(--green)">${stats.total_liked||0}</b></span><span>Skipped: <b style="color:var(--red)">${stats.total_disliked||0}</b></span>`;}
+async function doSwipe(action){if(!discCards.length)return;const card=discCards[0];try{await api('/api/swipe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:card.id,action})});discCards.shift();}catch(e){}finally{renderCards();try{const stats=await api('/api/discovery-stats');document.getElementById('disc-stats').innerHTML=`<span>Liked: <b style="color:var(--green)">${stats.total_liked||0}</b></span><span>Skipped: <b style="color:var(--red)">${stats.total_disliked||0}</b></span>`;}catch(e){}}}
 
 /* ─── Connections ─────────────────────────── */
 async function loadConns(){
