@@ -420,7 +420,10 @@ async def post_approved_drafts():
             single = draft.get("image_path")
             image_list = [single] if single else []
 
-        success, err_info = await post_to_linkedin(content, image_list)
+        try:
+            success, err_info = await post_to_linkedin(content, image_list)
+        except Exception as e:
+            success, err_info = False, {"error": f"Unexpected error: {e}", "screenshot": None}
 
         if success:
             draft["status"] = "posted"
