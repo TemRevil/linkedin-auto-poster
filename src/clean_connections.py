@@ -402,7 +402,8 @@ async def scrape_profiles(max_count: int = 0):
         updated = 0
         errors = 0
 
-        for i, conn in enumerate(connections[:total]):
+        try:
+          for i, conn in enumerate(connections[:total]):
             url = conn.get("profile_url", "")
             if not url:
                 continue
@@ -500,8 +501,8 @@ async def scrape_profiles(max_count: int = 0):
                     json.dump(connections, f, indent=2, ensure_ascii=False)
                 tmp.replace(CONNECTIONS_FILE)
                 print(f"  [Progress saved: {i+1}/{total}]")
-
-        await browser.close()
+        finally:
+            await browser.close()
 
     # Final save (atomic: temp file + replace)
     tmp = CONNECTIONS_FILE.with_suffix(".tmp")
