@@ -46,6 +46,6 @@ for r in conn.execute("SELECT keyword, doc_count FROM corpus_stats ORDER BY doc_
 total = conn.execute('SELECT COUNT(*) FROM discovery_cards').fetchone()[0]
 swipes = conn.execute('SELECT COUNT(*) FROM swipe_events').fetchone()[0]
 likes = conn.execute("SELECT COUNT(*) FROM discovery_cards WHERE status='liked'").fetchone()[0]
-skipped = conn.execute("SELECT COUNT(*) FROM discovery_cards WHERE status='skipped'").fetchone()[0]
+disliked = conn.execute("SELECT COUNT(*) FROM discovery_cards WHERE status='disliked'").fetchone()[0]
 pending = conn.execute("SELECT COUNT(*) FROM discovery_cards WHERE status='pending'").fetchone()[0]
-print(f"\n  Cards: {total}, Swipes: {swipes}, Likes: {likes}, Skipped: {skipped}, Pending: {pending}")
+print(f"\n  Cards: {total}, Swipes: {swipes}, Likes: {likes}, Disliked: {disliked}, Pending: {pending}")
