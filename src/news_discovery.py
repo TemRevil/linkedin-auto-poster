@@ -233,6 +233,19 @@ async def discover_news() -> list[dict]:
     # Read once per run; the result is identical for every card, and the cache
     # file would otherwise be re-opened/parsed up to 25 times below.
     gmail_prefs = _extract_gmail_preferences()
+    # Same rationale for audience insights: the file is identical for every
+    # card, so parse it once instead of re-opening it inside _calculate_score.
+    audience_insights = None
+    _insights_file = BASE_DIR / "audience_insights.json"
+    if _insights_file.exists():
+        try:
+            with open(_insights_file, "r", encoding="utf-8") as f:
+                audience_insights = json.load(f)
+        except Exception:
+            audience_insights = None
+    # Memoize source-quality lookups so each distinct source hits the DB once
+    # per run instead of once per article.
+    source_quality_cache: dict = {}
 
     cards = []
     # Include hour+minute so multiple discovery runs in a day produce
@@ -273,7 +286,8 @@ async def discover_news() -> list[dict]:
         # Calculate score
         score = _calculate_score(
             keywords, source, article_type,
-            kw_weights, src_weights, interests, blacklist, gmail_prefs
+            kw_weights, src_weights, interests, blacklist, gmail_prefs,
+            audience_insights, source_quality_cache
         )
 
         card = {
@@ -343,7 +357,9 @@ def _cluster_articles(articles: list[dict]) -> list[dict]:
 def _calculate_score(keywords: list, source: str, article_type: str,
                      kw_weights: dict, src_weights: dict,
                      interests: list, blacklist: list,
-                     gmail_prefs: dict | None = None) -> float:
+                     gmail_prefs: dict | None = None,
+                     audience_insights: dict | None = None,
+                     source_quality_cache: dict | None = None) -> float:
     """Score an article using TF-IDF weighted, time-decayed preferences
     plus audience insights, Gmail signals, and profile interest enforcement."""
     score = 0.0
@@ -370,8 +386,15 @@ def _calculate_score(keywords: list, source: str, article_type: str,
     src_lower = source.lower()
     if src_lower in src_weights:
         score += src_weights[src_lower]
-    # Multiply by source quality (0.0-1.0) — auto-prune low-quality sources
-    quality = db.get_source_quality(source)
+    # Multiply by source quality (0.0-1.0) — auto-prune low-quality sources.
+    # Memoized per source for the run; fall back to a direct query for any
+    # standalone caller that doesn't supply a cache.
+    if source_quality_cache is not None:
+        if source not in source_quality_cache:
+            source_quality_cache[source] = db.get_source_quality(source)
+        quality = source_quality_cache[source]
+    else:
+        quality = db.get_source_quality(source)
     if quality < 0.3:
         score -= 1.5  # Source has been mostly rejected
 
@@ -380,11 +403,19 @@ def _calculate_score(keywords: list, source: str, article_type: str,
         score += 1.5
 
     # ─── Audience insights — proportional sqrt-weighted boost ────────────
-    insights_file = BASE_DIR / "audience_insights.json"
-    if insights_file.exists():
+    # Parsed once per discovery run and passed in; fall back to a fresh read
+    # for any standalone caller that doesn't supply it.
+    if audience_insights is None:
+        insights_file = BASE_DIR / "audience_insights.json"
+        if insights_file.exists():
+            try:
+                with open(insights_file, "r", encoding="utf-8") as f:
+                    audience_insights = json.load(f)
+            except Exception:
+                audience_insights = None
+    if audience_insights:
         try:
-            with open(insights_file, "r", encoding="utf-8") as f:
-                insights = json.load(f)
+            insights = audience_insights
 
             audience_kws = {t["word"].lower() for t in insights.get("top_titles", [])[:20]}
             for kw in keywords:
