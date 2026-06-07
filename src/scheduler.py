@@ -11,9 +11,7 @@ import asyncio
 import sys
 from datetime import datetime
 
-from config import (
-    POST_TIME, DISCOVERY_TIME, APPROVAL_URL, APPROVAL_PORT, get_setting
-)
+from config import APPROVAL_URL
 from news_scraper import gather_all_news
 from post_generator import generate_post_draft, load_profile, pick_best_topic
 from approval_server import run_server, send_reminder_notification
