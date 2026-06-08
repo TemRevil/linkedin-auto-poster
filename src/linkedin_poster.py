@@ -406,8 +406,12 @@ async def post_approved_drafts():
     posted_count = 0
     failed_count = 0
     for f in sorted(POSTS_DIR.glob("draft_*.json")):
-        with open(f, "r", encoding="utf-8") as fp:
-            draft = json.load(fp)
+        try:
+            with open(f, "r", encoding="utf-8") as fp:
+                draft = json.load(fp)
+        except (json.JSONDecodeError, OSError) as e:
+            print(f"[Poster] Skipping unreadable draft {f.name}: {e}")
+            continue
 
         if draft.get("status") != "approved":
             continue
