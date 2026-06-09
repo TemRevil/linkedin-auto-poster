@@ -187,14 +187,18 @@ def cmd_status():
     approved_count = 0
     posted_count = 0
     for f in pending:
-        with open(f, "r", encoding="utf-8") as fp:
-            d = json.load(fp)
-            if d["status"] == "pending_approval":
-                pending_count += 1
-            elif d["status"] == "approved":
-                approved_count += 1
-            elif d["status"] == "posted":
-                posted_count += 1
+        try:
+            with open(f, "r", encoding="utf-8") as fp:
+                d = json.load(fp)
+        except (json.JSONDecodeError, OSError):
+            continue
+        status = d.get("status")
+        if status == "pending_approval":
+            pending_count += 1
+        elif status == "approved":
+            approved_count += 1
+        elif status == "posted":
+            posted_count += 1
 
     print(f"    Pending approval: {pending_count}")
     print(f"    Approved (ready): {approved_count}")
