@@ -580,8 +580,10 @@ def analyze_audience(connections=None):
         print(f"\n  Top locations:")
         [print(f"    {loc}: {cnt}x") for loc, cnt in top_locs[:5]]
 
-    with open(CONNECTIONS_SUMMARY_FILE, "w", encoding="utf-8") as f:
+    tmp = CONNECTIONS_SUMMARY_FILE.with_suffix(".tmp")
+    with open(tmp, "w", encoding="utf-8") as f:
         json.dump(insights, f, indent=2, ensure_ascii=False)
+    tmp.replace(CONNECTIONS_SUMMARY_FILE)
     print(f"\n[Audience] Saved: {CONNECTIONS_SUMMARY_FILE.name}")
     return insights
 
