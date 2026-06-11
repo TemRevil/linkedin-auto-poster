@@ -35,9 +35,11 @@ async def login_and_save_session():
         await browser.close()
 
 
-async def post_to_linkedin(content: str, image_path=None) -> bool:
+async def post_to_linkedin(content: str, image_path=None) -> tuple[bool, dict | None]:
     """Post content (and optional image(s)) to LinkedIn.
-    image_path may be a single path (str) or a list of paths for a carousel."""
+    image_path may be a single path (str) or a list of paths for a carousel.
+    Returns (success, err_info) — err_info is None on success, else a dict
+    with "error" and "screenshot" keys."""
     # Normalize to a list of existing files
     if image_path is None:
         image_paths = []
