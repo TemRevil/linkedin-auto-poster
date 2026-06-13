@@ -536,6 +536,15 @@ def record_swipe_db(card_id: str, action: str) -> bool:
             UPDATE discovery_cards SET status = ?, swiped_at = ? WHERE id = ?
         """, (action, now, card_id))
 
+        # Re-swiping the same card (a double-tap, a retried POST, or a genuine
+        # like<->dislike change of mind) must REPLACE that card's prior signal,
+        # not stack a second — possibly contradictory — set of events that then
+        # double-counts into the time-decayed keyword/source weights. Clear this
+        # card's existing events before re-inserting so record_swipe is
+        # idempotent per card. (audit-4)
+        conn.execute("DELETE FROM swipe_events WHERE card_id = ?", (card_id,))
+        conn.execute("DELETE FROM source_events WHERE card_id = ?", (card_id,))
+
         # Insert per-keyword swipe events (for time-decayed weights)
         keywords = json.loads(row["keywords"]) if row["keywords"] else []
         for kw in keywords:
