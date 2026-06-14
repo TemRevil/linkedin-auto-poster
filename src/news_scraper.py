@@ -346,8 +346,20 @@ async def gather_all_news() -> list[dict]:
             seen_titles.add(title_key)
             unique.append(article)
 
-    # Sort by relevance (prefer recent, prefer diverse sources)
-    unique.sort(key=lambda x: x.get("published", ""), reverse=True)
+    # Sort by recency. `published` is stored in incompatible formats across
+    # sources (RFC-822 from RSS, ISO-8601 from DDG/web/Gmail), so a plain
+    # string sort is meaningless. Parse to a real datetime — reusing the same
+    # parser _is_fresh relies on — and fall back to datetime.min when unparseable.
+    from dateutil.parser import parse as _dp
+
+    def _pub_key(a):
+        try:
+            dt = _dp(a.get("published", ""), fuzzy=True)
+            return dt.astimezone().replace(tzinfo=None) if dt.tzinfo else dt
+        except Exception:
+            return datetime.min
+
+    unique.sort(key=_pub_key, reverse=True)
 
     # Save raw news data
     news_file = POSTS_DIR / f"news_raw_{datetime.now().strftime('%Y%m%d')}.json"
