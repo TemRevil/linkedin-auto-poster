@@ -614,8 +614,11 @@ def api_connections():
             connections = [c for c in connections if
                           any(w in c.get("headline", "").lower() for w in words)]
 
-    page = int(request.args.get("page", 1))
-    per_page = int(request.args.get("per_page", 30))
+    try:
+        page = max(1, int(request.args.get("page", 1)))
+        per_page = min(200, max(1, int(request.args.get("per_page", 30))))
+    except (TypeError, ValueError):
+        page, per_page = 1, 30
     total = len(connections)
     start = (page - 1) * per_page
 
