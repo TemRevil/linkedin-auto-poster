@@ -1683,7 +1683,7 @@ Output ONLY the post text. No preamble, no explanation, no JSON wrapping. Just t
     try:
         proc = subprocess.Popen(
             cli_args,
-            stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
             text=True, cwd=str(BASE_DIR), encoding="utf-8", errors="replace",
             env=env, bufsize=1,
         )
@@ -2027,7 +2027,7 @@ def _run_regenerate(draft: dict, mode: str):
                 try:
                     proc = subprocess.Popen(
                         cli_args,
-                        stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                        stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                         text=True, cwd=str(POSTS_DIR.parent), encoding="utf-8", errors="replace",
                         env=env, bufsize=1,
                     )
