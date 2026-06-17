@@ -419,7 +419,10 @@ async def post_approved_drafts():
             continue
 
         print(f"\n[Poster] Posting draft: {f.name}")
-        content = draft["post_content"]
+        content = draft.get("post_content")
+        if not content:
+            print(f"[Poster] Skipping draft {f.name}: no post_content")
+            continue
         # Support both the new image_paths list and the legacy single image_path.
         image_list = draft.get("image_paths")
         if not (isinstance(image_list, list) and image_list):
