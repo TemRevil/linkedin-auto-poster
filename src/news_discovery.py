@@ -512,19 +512,38 @@ def _extract_gmail_preferences() -> dict:
             pass
 
     keywords = {}
+    # Gmail newsletters were historically expected in gmail_articles.json, but
+    # nothing in the pipeline ever writes that file — so this soft signal was
+    # permanently empty and the "Gmail newsletter topic signals" boost in
+    # _calculate_score never fired. Read gmail_articles.json when present, else
+    # fall back to the Gmail-typed items in the day's raw news dump
+    # (posts/news_raw_*.json, written by gather_all_news), which is where
+    # scraped newsletters actually land. (audit-5)
+    articles = []
     gmail_data_file = BASE_DIR / "gmail_articles.json"
     if gmail_data_file.exists():
         try:
             with open(gmail_data_file, "r", encoding="utf-8") as f:
                 articles = json.load(f)
-            for art in articles:
-                title = art.get("title", "") or art.get("subject", "")
-                summary = art.get("summary", "") or art.get("snippet", "")
-                extracted = extract_keywords(f"{title} {summary}", top_n=5)
-                for kw in extracted:
-                    keywords[kw] = keywords.get(kw, 0) + 0.5
         except Exception:
-            pass
+            articles = []
+    if not articles:
+        try:
+            from config import POSTS_DIR
+            raw_files = sorted(POSTS_DIR.glob("news_raw_*.json"))
+            if raw_files:
+                with open(raw_files[-1], "r", encoding="utf-8") as f:
+                    all_arts = json.load(f)
+                articles = [a for a in all_arts if a.get("type") == "gmail"]
+        except Exception:
+            articles = []
+
+    for art in articles:
+        title = art.get("title", "") or art.get("subject", "")
+        summary = art.get("summary", "") or art.get("snippet", "")
+        extracted = extract_keywords(f"{title} {summary}", top_n=5)
+        for kw in extracted:
+            keywords[kw] = keywords.get(kw, 0) + 0.5
 
     try:
         with open(cache_file, "w", encoding="utf-8") as f:
