@@ -619,6 +619,18 @@ def get_image_urls(query: str) -> dict:
 
 
 def generate_hashtags(title: str, max_count: int = 3) -> str:
+    from config import get_content_topic
+    topic = get_content_topic()
+    topic_lower = topic.lower()
+    is_ai_topic = any(t in topic_lower for t in
+                      ("ai", "artificial intelligence", "machine learning",
+                       "ml", "tech", "web", "develop"))
+
+    # Fallback hashtag derived from the configured content topic, e.g.
+    # "cyber security" -> "#CyberSecurity".
+    topic_words = re.findall(r"\w+", topic)
+    topic_tag = "#" + "".join(w.capitalize() for w in topic_words) if topic_words else "#Tech"
+
     ai_hashtags = {
         "ai": "#AI", "artificial intelligence": "#AI",
         "machine learning": "#MachineLearning", "llm": "#LLMs",
@@ -633,14 +645,15 @@ def generate_hashtags(title: str, max_count: int = 3) -> str:
 
     title_lower = title.lower()
     matched = []
-    for keyword, hashtag in ai_hashtags.items():
-        if keyword in title_lower and hashtag not in matched:
-            matched.append(hashtag)
-        if len(matched) >= max_count:
-            break
+    if is_ai_topic:
+        for keyword, hashtag in ai_hashtags.items():
+            if keyword in title_lower and hashtag not in matched:
+                matched.append(hashtag)
+            if len(matched) >= max_count:
+                break
 
     if not matched:
-        matched = ["#AI", "#WebDev"]
+        matched = ["#AI", "#WebDev"] if is_ai_topic else [topic_tag]
 
     return " ".join(matched[:max_count])
 
