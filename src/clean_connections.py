@@ -240,9 +240,11 @@ def clean_connections_data():
 
     print(f"[Clean] Loaded {len(connections)} connections")
 
-    # Backup original
-    with open(BACKUP_FILE, "w", encoding="utf-8") as f:
+    # Backup original (atomic: temp file + replace)
+    backup_tmp = BACKUP_FILE.with_suffix(".tmp")
+    with open(backup_tmp, "w", encoding="utf-8") as f:
         json.dump(connections, f, indent=2, ensure_ascii=False)
+    backup_tmp.replace(BACKUP_FILE)
     print(f"[Clean] Backup saved to {BACKUP_FILE.name}")
 
     cleaned = []
@@ -347,9 +349,11 @@ def clean_connections_data():
             else:
                 conn["location"] = location.strip()
 
-    # Save cleaned data
-    with open(CONNECTIONS_FILE, "w", encoding="utf-8") as f:
+    # Save cleaned data (atomic: temp file + replace)
+    tmp = CONNECTIONS_FILE.with_suffix(".tmp")
+    with open(tmp, "w", encoding="utf-8") as f:
         json.dump(cleaned, f, indent=2, ensure_ascii=False)
+    tmp.replace(CONNECTIONS_FILE)
 
     print(f"[Clean] Done! {len(cleaned)} connections saved ({fixed_count} fixed, {skipped} duplicates removed)")
     print(f"[Clean] Original backed up at: {BACKUP_FILE.name}")
