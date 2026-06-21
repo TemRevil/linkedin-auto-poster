@@ -659,7 +659,23 @@ def generate_hashtags(title: str, max_count: int = 3) -> str:
                 break
 
     if not matched:
-        matched = ["#AI", "#WebDev"] if is_ai_topic else [topic_tag]
+        if is_ai_topic:
+            matched = ["#AI", "#WebDev"]
+        else:
+            # Non-AI / custom niche: seed with the topic tag, then top up with
+            # tags built from distinctive title words so a custom topic gets
+            # several relevant hashtags up to max_count instead of a lone
+            # #Topic (the profile asks for 3-5 per post). (audit-5)
+            matched = [topic_tag]
+            _skip = {"the", "and", "for", "with", "from", "this", "that",
+                     "your", "into", "over", "about", "news", "what", "when"}
+            for w in re.findall(r"[A-Za-z]{4,}", title):
+                tag = "#" + w.capitalize()
+                if w.lower() in _skip or tag.lower() == topic_tag.lower() or tag in matched:
+                    continue
+                matched.append(tag)
+                if len(matched) >= max_count:
+                    break
 
     return " ".join(matched[:max_count])
 
