@@ -266,7 +266,28 @@ async def discover_news() -> list[dict]:
             continue
         candidate_articles.append(article)
 
-    for i, article in enumerate(candidate_articles[:25]):  # Process top 25 candidates
+    # Score ALL candidates before truncating, so the preference ranking
+    # actually picks the best stories instead of just the first 25 scraped.
+    scored_candidates = []
+    for article in candidate_articles:
+        title = article.get("title", "")
+        # Strip HTML from summary BEFORE storing
+        summary = strip_html(article.get("summary", ""))[:400]
+        keywords = extract_keywords(f"{title} {summary}", top_n=5, source_title=title)
+        source = article.get("source", "Unknown")
+        article_type = article.get("type", "rss")
+
+        score = _calculate_score(
+            keywords, source, article_type,
+            kw_weights, src_weights, interests, blacklist, gmail_prefs,
+            audience_insights, source_quality_cache
+        )
+
+        scored_candidates.append((score, article, title, summary, keywords, source, article_type))
+
+    scored_candidates.sort(key=lambda x: x[0], reverse=True)
+
+    for i, (score, article, title, summary, keywords, source, article_type) in enumerate(scored_candidates[:25]):
         card_id = f"disc_{run_stamp}_{i:03d}"
 
         # Skip if card already exists
@@ -275,20 +296,6 @@ async def discover_news() -> list[dict]:
             if existing:
                 cards.append(existing)
             continue
-
-        title = article.get("title", "")
-        # Strip HTML from summary BEFORE storing
-        summary = strip_html(article.get("summary", ""))[:400]
-        keywords = extract_keywords(f"{title} {summary}", top_n=5, source_title=title)
-        source = article.get("source", "Unknown")
-        article_type = article.get("type", "rss")
-
-        # Calculate score
-        score = _calculate_score(
-            keywords, source, article_type,
-            kw_weights, src_weights, interests, blacklist, gmail_prefs,
-            audience_insights, source_quality_cache
-        )
 
         card = {
             "id": card_id,
