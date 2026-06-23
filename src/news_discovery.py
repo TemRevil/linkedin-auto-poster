@@ -13,6 +13,7 @@ Scoring uses:
   - Topic clustering (one article per story, not three)
   - Epsilon-greedy exploration (15% random cards to prevent filter bubbles)
 """
+import hashlib
 import json
 import math
 import random
@@ -287,8 +288,10 @@ async def discover_news() -> list[dict]:
 
     scored_candidates.sort(key=lambda x: x[0], reverse=True)
 
-    for i, (score, article, title, summary, keywords, source, article_type) in enumerate(scored_candidates[:25]):
-        card_id = f"disc_{run_stamp}_{i:03d}"
+    for score, article, title, summary, keywords, source, article_type in scored_candidates[:25]:
+        url = article.get("link", "")
+        url_hash = hashlib.sha1(url.encode("utf-8")).hexdigest()[:8]
+        card_id = f"disc_{run_stamp}_{url_hash}"
 
         # Skip if card already exists
         if db.card_exists(card_id):
