@@ -80,6 +80,11 @@ def init_db():
                 value TEXT
             );
 
+            CREATE TABLE IF NOT EXISTS corpus_seen_urls (
+                url TEXT PRIMARY KEY,
+                counted_at TEXT
+            );
+
             CREATE TABLE IF NOT EXISTS rejection_reasons (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 draft_id TEXT NOT NULL,
@@ -114,6 +119,17 @@ def update_corpus(articles: list[dict]):
         new_docs = 0
 
         for article in articles:
+            url = (article.get("link") or "").strip()
+            if url:
+                # Skip articles whose URL has already contributed to the
+                # corpus on a previous run, so re-scraped stories don't
+                # keep inflating doc_count/total_docs without bound.
+                seen = conn.execute(
+                    "SELECT 1 FROM corpus_seen_urls WHERE url = ?", (url,)
+                ).fetchone()
+                if seen:
+                    continue
+
             title = article.get("title", "")
             summary = article.get("summary", "")
             text = f"{title} {summary}".lower()
@@ -131,6 +147,11 @@ def update_corpus(articles: list[dict]):
                             doc_count = doc_count + 1,
                             updated_at = ?
                     """, (kw, now, now))
+                if url:
+                    conn.execute(
+                        "INSERT OR IGNORE INTO corpus_seen_urls (url, counted_at) VALUES (?, ?)",
+                        (url, now),
+                    )
 
         total_docs += new_docs
         conn.execute("""
