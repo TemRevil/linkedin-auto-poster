@@ -612,7 +612,8 @@ def api_connections():
         words = kw_map.get(category, [])
         if words:
             connections = [c for c in connections if
-                          any(w in c.get("headline", "").lower() for w in words)]
+                          any(w in (c.get("headline", "") + " " + c.get("name", "")).lower()
+                              for w in words)]
 
     try:
         page = max(1, int(request.args.get("page", 1)))
