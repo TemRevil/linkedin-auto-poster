@@ -2378,9 +2378,9 @@ function removeCurrentImage(draftId){
 // Replace a card's image section in place after add/remove
 function refreshImageSection(draftId, paths){
     const el = document.getElementById('imgsec-'+draftId);
+    const card = el ? el.closest('.post-card') : null;
     if(el){ el.outerHTML = imageSectionHtml(draftId, paths); }
     // Hide the article-suggestion strip once images exist
-    const card = el ? el.closest('.post-card') : null;
     const sugg = card ? card.querySelector('.image-links') : null;
     if(sugg) sugg.style.display = (paths && paths.length) ? 'none' : '';
 }
