@@ -10,6 +10,7 @@ To set up Gmail access:
 5. Download credentials.json and place in this folder
 6. Run this script to authenticate
 """
+import argparse
 import os
 import stat
 import sys
@@ -20,8 +21,9 @@ CREDS_FILE = _ROOT / "credentials.json"
 TOKEN_FILE = _ROOT / "auth_state" / "gmail_token.json"
 
 
-def setup_gmail():
-    """Authenticate with Gmail API and save token."""
+def setup_gmail(output_name: str = "gmail_token.json"):
+    """Authenticate with Gmail API and save token to auth_state/<output_name>."""
+    token_file = _ROOT / "auth_state" / output_name
     if not CREDS_FILE.exists():
         print("\n" + "=" * 50)
         print("  GMAIL SETUP")
@@ -54,8 +56,8 @@ def setup_gmail():
         SCOPES = ["https://www.googleapis.com/auth/gmail.readonly"]
 
         creds = None
-        if TOKEN_FILE.exists():
-            creds = Credentials.from_authorized_user_file(str(TOKEN_FILE), SCOPES)
+        if token_file.exists():
+            creds = Credentials.from_authorized_user_file(str(token_file), SCOPES)
 
         if not creds or not creds.valid:
             if creds and creds.expired and creds.refresh_token:
@@ -64,13 +66,13 @@ def setup_gmail():
                 flow = InstalledAppFlow.from_client_secrets_file(str(CREDS_FILE), SCOPES)
                 creds = flow.run_local_server(port=0)
 
-            TOKEN_FILE.parent.mkdir(exist_ok=True)
-            TOKEN_FILE.write_text(creds.to_json())
+            token_file.parent.mkdir(exist_ok=True)
+            token_file.write_text(creds.to_json())
             if os.name == "posix":
-                os.chmod(TOKEN_FILE, stat.S_IRUSR | stat.S_IWUSR)  # 0o600
+                os.chmod(token_file, stat.S_IRUSR | stat.S_IWUSR)  # 0o600
 
         print("\n  Gmail authenticated successfully!")
-        print(f"  Token saved to: {TOKEN_FILE}")
+        print(f"  Token saved to: {token_file}")
         print("  Your AI newsletters will now be included in news scraping.\n")
 
     except ImportError:
@@ -80,4 +82,7 @@ def setup_gmail():
 
 
 if __name__ == "__main__":
-    setup_gmail()
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--output", default="gmail_token.json",
+                    help="Token filename to write under auth_state/")
+    setup_gmail(ap.parse_args().output)
