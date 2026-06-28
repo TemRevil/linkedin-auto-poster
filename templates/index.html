@@ -2725,7 +2725,7 @@ async function loadAccount(){
     // --- Preferences tab: with delete + add ---
     const liked=prefs.liked_keywords||{};const disliked=prefs.disliked_keywords||{};
     const likedArr=Object.entries(liked).sort((a,b2)=>b2[1]-a[1]);const dislikedArr=Object.entries(disliked).sort((a,b2)=>b2[1]-a[1]);
-    const maxW=Math.max(...Object.values(liked),1);const maxD=Math.max(...Object.values(disliked),1);
+    const maxW=Object.values(liked).reduce((m,v)=>Math.max(m,v),1);const maxD=Object.values(disliked).reduce((m,v)=>Math.max(m,v),1);
     let prefHtml='<div class="card"><div class="card-head"><span class="card-title">Liked Topics</span><span style="font-size:12px;color:var(--green)">'+(prefs.total_liked||0)+' total</span></div>';
     if(likedArr.length){prefHtml+=likedArr.slice(0,15).map(([w,c])=>`<div class="pref-row"><span class="pref-word">${esc(w)}</span><div class="pref-bar"><div class="pref-bar-fill" style="width:${(c/maxW)*100}%;background:var(--green)"></div></div><span class="pref-count">${c}x</span><button class="pref-del" onclick="deletePref('${esc(w)}','liked')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>`).join('');}
     else{prefHtml+='<p style="color:var(--text-tertiary);font-size:13px;padding:8px 0">No liked topics yet. Swipe right on Discover cards!</p>';}
