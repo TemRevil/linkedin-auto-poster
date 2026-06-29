@@ -482,7 +482,7 @@ async def scrape_profiles(max_count: int = 0):
 
                 updated += 1
                 if (i + 1) % 10 == 0:
-                    print(f"  [{i+1}/{total}] {conn['name']} — {conn.get('headline', '')[:40]}")
+                    print(f"  [{i+1}/{total}] {conn.get('name', '')} — {conn.get('headline', '')[:40]}")
 
                 # Rate limiting: random delay 1.5-3s
                 import random
