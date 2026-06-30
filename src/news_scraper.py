@@ -15,9 +15,26 @@ from playwright.async_api import async_playwright
 
 from config import (
     AI_NEWS_FEEDS, RESEARCH_FEEDS, AI_SEARCH_QUERIES, POSTS_DIR, LOGS_DIR,
+    AUTH_DIR, SESSIONS_FILE,
     GMAIL_SEARCH_QUERY, get_setting,
     get_news_feeds, get_search_queries, get_gmail_search_query,
 )
+
+
+def _get_active_gmail_session_file() -> Path:
+    """Resolve the active Gmail session's token file from sessions.json,
+    falling back to the legacy gmail_token.json so single-session installs
+    keep working."""
+    if SESSIONS_FILE.exists():
+        try:
+            with open(SESSIONS_FILE, "r", encoding="utf-8") as f:
+                config = json.load(f)
+            for s in config.get("gmail", []):
+                if s.get("active") and s.get("file"):
+                    return AUTH_DIR / s["file"]
+        except (json.JSONDecodeError, OSError):
+            pass
+    return AUTH_DIR / "gmail_token.json"
 
 
 def scrape_rss_feeds() -> list[dict]:
@@ -229,14 +246,17 @@ async def scrape_web_search() -> list[dict]:
     return articles
 
 
-def scrape_gmail_newsletters(gmail_service=None) -> list[dict]:
+def scrape_gmail_newsletters(gmail_service=None, session_file=None) -> list[dict]:
     """
     Extract AI news from Gmail newsletters.
     Requires Gmail API credentials (setup via gmail_setup.py).
     Falls back gracefully if not configured.
+
+    session_file: optional Path to a specific Gmail token; defaults to the
+    active Gmail session resolved from sessions.json.
     """
     articles = []
-    creds_file = Path(__file__).resolve().parent.parent / "auth_state" / "gmail_token.json"
+    creds_file = Path(session_file) if session_file else _get_active_gmail_session_file()
 
     if not creds_file.exists():
         print("  [Gmail] No credentials found. Run gmail_setup.py first.")
