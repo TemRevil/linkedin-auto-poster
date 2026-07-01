@@ -461,6 +461,8 @@ def generate_post_draft(article: dict, profile: dict = None,
             draft.setdefault("generated_by", "claude_code_cli")
             draft.setdefault("created_at", datetime.now().isoformat())
             draft.setdefault("post_type", post_type)
+            draft.setdefault("needs_image", False)
+            draft.setdefault("post_content", "")
 
             # Image URLs not yet populated — fill if needs_image
             if draft.get("needs_image") and not draft.get("image_urls"):
