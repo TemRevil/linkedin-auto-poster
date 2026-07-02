@@ -399,14 +399,22 @@ def analyze_audience(connections=None):
         r"\b(?:ai|ml|data|machine\s*learning|artificial\s*intelligence|"
         r"analyst|scientist|nlp|deep\s*learning)\b"
     )
+    # First-match wins, so check the most specific buckets BEFORE the broad
+    # "developers" bucket. Otherwise a "Data Engineer" / "ML Engineer" headline
+    # matches the generic "engineer" keyword and is claimed by developers before
+    # the dedicated data_ai regex ever runs (and "lead"/"cto" let managers /
+    # founders_ceos swallow data-AI practitioners too). Ordering data_ai first
+    # and developers last restores the intended classification. (audit-7 2.C)
+    priority = ["data_ai", "recruiters", "designers", "founders_ceos",
+                "managers", "students", "developers"]
     for c in connections:
         h = c.get("headline", "").lower()
         found = False
-        for cat, words in kw.items():
+        for cat in priority:
             if cat == "data_ai":
                 matched = bool(data_ai_re.search(h))
             else:
-                matched = any(w in h for w in words)
+                matched = any(w in h for w in kw[cat])
             if matched:
                 cats[cat].append(c)
                 found = True
