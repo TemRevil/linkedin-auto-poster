@@ -90,7 +90,12 @@ def humanize_text(text: str) -> str:
                     new_result.append(char)
                     first_found = True
                 else:
-                    new_result.append(".")
+                    # Insert ". " (not a bare ".") so a tight em-dash like
+                    # "context—aware" becomes "context. aware" instead of the
+                    # run-together "context.aware". Any double space this creates
+                    # around an already-spaced em-dash is collapsed by the
+                    # `re.sub(r"  +", " ", result)` normalization below. (audit-7 3.A)
+                    new_result.append(". ")
             else:
                 new_result.append(char)
         result = "".join(new_result)
