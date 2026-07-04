@@ -118,6 +118,12 @@ def update_corpus(articles: list[dict]):
         now = datetime.now().isoformat()
         new_docs = 0
 
+        # Bind extract_keywords once per call rather than re-running the import
+        # statement on every article. It stays a local (not module-level) import
+        # to avoid the database <-> news_discovery circular-import at load time.
+        # (audit-7 3.B)
+        from news_discovery import extract_keywords
+
         for article in articles:
             url = (article.get("link") or "").strip()
             if url:
@@ -134,7 +140,6 @@ def update_corpus(articles: list[dict]):
             summary = article.get("summary", "")
             text = f"{title} {summary}".lower()
             # Extract unique keywords from this doc
-            from news_discovery import extract_keywords
             keywords = set(kw.lower() for kw in extract_keywords(text, top_n=15))
 
             if keywords:
