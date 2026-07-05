@@ -1150,40 +1150,40 @@ def api_preferences():
 @app.route("/api/preferences/add", methods=["POST"])
 def api_preferences_add():
     """Manually add a preference keyword."""
-    data = request.get_json()
+    data = request.get_json(silent=True) or {}
     keyword = data.get("keyword", "").strip().lower()
     ptype = data.get("type", "liked")  # "liked" or "disliked"
 
     if not keyword:
         return jsonify({"message": "Keyword cannot be empty", "status": "error"}), 400
 
-    from news_discovery import load_preferences, save_preferences
-    prefs = load_preferences()
-
-    bucket = "liked_keywords" if ptype == "liked" else "disliked_keywords"
-    prefs[bucket][keyword] = prefs[bucket].get(keyword, 0) + 1
-    save_preferences(prefs)
+    # Persist to the SQLite swipe store (load/save_preferences is a read-only
+    # view now — save_preferences is a no-op — so writing there did nothing).
+    action = "liked" if ptype == "liked" else "disliked"
+    import database as db
+    if not db.set_manual_keyword(keyword, action):
+        return jsonify({"message": "Could not save keyword", "status": "error"}), 400
 
     return jsonify({"message": f"Added '{keyword}' to {ptype}", "status": "ok"})
 
 
 @app.route("/api/preferences/delete", methods=["POST"])
 def api_preferences_delete():
-    """Remove a preference keyword."""
-    data = request.get_json()
+    """Remove a manually-added preference keyword."""
+    data = request.get_json(silent=True) or {}
     keyword = data.get("keyword", "").strip().lower()
-    ptype = data.get("type", "liked")
 
-    from news_discovery import load_preferences, save_preferences
-    prefs = load_preferences()
+    if not keyword:
+        return jsonify({"message": "Keyword cannot be empty", "status": "error"}), 400
 
-    bucket = "liked_keywords" if ptype == "liked" else "disliked_keywords"
-    if keyword in prefs[bucket]:
-        del prefs[bucket][keyword]
-        save_preferences(prefs)
+    import database as db
+    if db.remove_manual_keyword(keyword):
         return jsonify({"message": f"Removed '{keyword}'", "status": "ok"})
 
-    return jsonify({"message": "Keyword not found", "status": "error"}), 404
+    return jsonify({
+        "message": "No manually-added keyword by that name (learned keywords come from swipes).",
+        "status": "error",
+    }), 404
 
 
 # ─── Discovery API ───────────────────────────────────────────────────────────

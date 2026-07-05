@@ -296,6 +296,53 @@ def get_all_keyword_weights() -> dict[str, float]:
     return weights
 
 
+# ─── Manual Keyword Preferences ──────────────────────────────────────────────
+# The dashboard lets the user hand-add/remove liked/disliked keywords. Since
+# preferences are stored as swipe events (not a static dict), a manual keyword
+# is persisted as a synthetic swipe event under a stable card_id so it flows
+# through the same time-decayed weight machinery as real swipes.
+
+def set_manual_keyword(keyword: str, action: str) -> bool:
+    """Persist a manually-added keyword preference as a swipe event.
+    action is 'liked' or 'disliked'. Idempotent per keyword: replaces any
+    prior manual event for the same keyword. Returns True on success."""
+    keyword = (keyword or "").strip().lower()
+    if not keyword or action not in ("liked", "disliked"):
+        return False
+    card_id = f"manual_{keyword}"
+    conn = get_conn()
+    try:
+        # Drop any earlier manual event for this keyword so toggling
+        # liked<->disliked doesn't leave both rows behind.
+        conn.execute("DELETE FROM swipe_events WHERE card_id = ?", (card_id,))
+        conn.execute(
+            "INSERT INTO swipe_events (card_id, keyword, action, swiped_at) "
+            "VALUES (?, ?, ?, ?)",
+            (card_id, keyword, action, datetime.now().isoformat()),
+        )
+        conn.commit()
+        return True
+    finally:
+        conn.close()
+
+
+def remove_manual_keyword(keyword: str) -> bool:
+    """Remove a manually-added keyword preference (the synthetic swipe event).
+    Returns True if a manual entry was removed. Organic swipe history for the
+    keyword is left untouched."""
+    keyword = (keyword or "").strip().lower()
+    if not keyword:
+        return False
+    card_id = f"manual_{keyword}"
+    conn = get_conn()
+    try:
+        cur = conn.execute("DELETE FROM swipe_events WHERE card_id = ?", (card_id,))
+        conn.commit()
+        return cur.rowcount > 0
+    finally:
+        conn.close()
+
+
 def get_source_weight(source: str) -> float:
     """Calculate time-decayed weight for a source."""
     conn = get_conn()
