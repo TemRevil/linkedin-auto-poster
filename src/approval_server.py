@@ -55,12 +55,24 @@ _scrape_result = None
 # ─── Session Manager ────────────────────────────────────────────────────────
 
 def _load_sessions_config():
-    """Load multi-session config, migrating legacy single files if needed."""
+    """Load multi-session config, migrating legacy single files if needed.
+    A corrupt/half-written sessions.json is set aside and rebuilt from the
+    legacy files rather than 500-ing every account route that reads it."""
     if SESSIONS_FILE.exists():
-        with open(SESSIONS_FILE, "r", encoding="utf-8") as f:
-            return json.load(f)
+        try:
+            with open(SESSIONS_FILE, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except (json.JSONDecodeError, OSError) as e:
+            # One bad config file must not take down the whole sessions/account
+            # surface (get_system_status and every /api/sessions* route call
+            # this). Preserve it for debugging, then fall through and rebuild.
+            print(f"[Sessions] sessions.json unreadable ({e}); rebuilding from legacy files.")
+            try:
+                SESSIONS_FILE.replace(SESSIONS_FILE.with_suffix(".corrupt"))
+            except OSError:
+                pass
 
-    # Migrate: if old linkedin.json exists, create sessions config
+    # Migrate/rebuild: if old linkedin.json exists, create sessions config
     config = {"linkedin": [], "gmail": []}
     legacy_li = AUTH_DIR / "linkedin.json"
     if legacy_li.exists():
