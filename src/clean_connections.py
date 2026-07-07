@@ -518,13 +518,22 @@ async def scrape_profiles(max_count: int = 0):
 
 
 def _get_linkedin_session_file() -> Path | None:
-    """Get the active LinkedIn session file."""
+    """Get the active LinkedIn session file.
+
+    Guards against a corrupt/partial sessions.json and against active entries
+    that are missing a "file" key, mirroring the hardened Gmail resolver in
+    news_scraper._get_active_gmail_session_file (audit-7 2.A). On any parse or
+    lookup failure it falls through to the legacy linkedin.json instead of
+    crashing the caller with JSONDecodeError / KeyError. (audit-8 2.C)"""
     if SESSIONS_FILE.exists():
-        with open(SESSIONS_FILE, "r", encoding="utf-8") as f:
-            config = json.load(f)
-        for s in config.get("linkedin", []):
-            if s.get("active"):
-                return AUTH_DIR / s["file"]
+        try:
+            with open(SESSIONS_FILE, "r", encoding="utf-8") as f:
+                config = json.load(f)
+            for s in config.get("linkedin", []):
+                if s.get("active") and s.get("file"):
+                    return AUTH_DIR / s["file"]
+        except (json.JSONDecodeError, OSError):
+            pass
     # Fallback to legacy file
     legacy = AUTH_DIR / "linkedin.json"
     if legacy.exists():
