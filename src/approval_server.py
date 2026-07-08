@@ -264,10 +264,13 @@ def api_all_posts():
 def api_approve():
     """Approve a draft AND immediately push it to LinkedIn via Playwright.
     Body: { id, content, auto_post?: bool=true }"""
-    data = request.get_json()
+    data = request.get_json(silent=True) or {}
     draft_id = data.get("id")
     content = data.get("content", "")
     auto_post = data.get("auto_post", True)
+
+    if not draft_id:
+        return jsonify({"message": "id is required", "status": "error"}), 400
 
     updates = {"status": "approved", "approved_at": datetime.now().isoformat()}
     if content:
@@ -403,9 +406,12 @@ def _archive_draft_images(draft: dict) -> int:
 
 @app.route("/api/reject", methods=["POST"])
 def api_reject():
-    data = request.get_json()
+    data = request.get_json(silent=True) or {}
     draft_id = data.get("id")
     reason = (data.get("reason") or "").strip()
+
+    if not draft_id:
+        return jsonify({"message": "id is required", "status": "error"}), 400
 
     # Move any attached images out of the active folder on rejection.
     existing = load_draft(draft_id)
@@ -432,10 +438,13 @@ def api_reject():
 
 @app.route("/api/edit", methods=["POST"])
 def api_edit():
-    data = request.get_json()
+    data = request.get_json(silent=True) or {}
     draft_id = data.get("id")
     content = data.get("content", "")
-    update_draft(draft_id, {"post_content": content})
+    if not draft_id:
+        return jsonify({"message": "id is required", "status": "error"}), 400
+    if update_draft(draft_id, {"post_content": content}) is None:
+        return jsonify({"message": "Draft not found", "status": "error"}), 404
     return jsonify({"message": "Edits saved.", "status": "ok"})
 
 
@@ -1217,7 +1226,7 @@ def api_discovery_stats():
 @app.route("/api/swipe", methods=["POST"])
 def api_swipe():
     from news_discovery import record_swipe
-    data = request.get_json()
+    data = request.get_json(silent=True) or {}
     card_id = data.get("id")
     action = data.get("action")  # "liked" or "disliked"
 
