@@ -174,8 +174,24 @@ def cmd_status():
     else:
         print(f"  Connections scraped: Not yet")
 
-    # Gmail
+    # Gmail — resolve the ACTIVE session's token file (gmail.json / gmail_2.json
+    # / ...) from sessions.json, falling back to the legacy gmail_token.json.
+    # Checking only the legacy path reported "No" for any Gmail session added via
+    # the dashboard, since those write session-named files. Mirrors
+    # news_scraper._get_active_gmail_session_file. (audit-8 3.B)
+    from config import SESSIONS_FILE
     gmail_file = AUTH_DIR / "gmail_token.json"
+    if SESSIONS_FILE.exists():
+        try:
+            import json
+            with open(SESSIONS_FILE, "r", encoding="utf-8") as f:
+                _sessions = json.load(f)
+            for _s in _sessions.get("gmail", []):
+                if _s.get("active") and _s.get("file"):
+                    gmail_file = AUTH_DIR / _s["file"]
+                    break
+        except (ValueError, OSError):
+            pass
     print(f"  Gmail connected: {'Yes' if gmail_file.exists() else 'No (optional)'}")
 
     # Drafts
