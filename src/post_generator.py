@@ -610,7 +610,11 @@ def suggest_image_query(article: dict) -> str:
                   "that", "this", "it"}
     words = [w.lower() for w in re.findall(r"\w+", title)
              if w.lower() not in stop_words and len(w) > 2]
-    return " ".join(words[:3]) + " technology"
+    # Append the "technology" suffix as a real list element and join once, so a
+    # title with no usable words yields "technology" — not " technology" with a
+    # leading space, which get_image_urls would turn into "-technology" in the
+    # image-search URLs. (audit-8 3.C)
+    return " ".join(words[:3] + ["technology"]).strip()
 
 
 def get_image_urls(query: str) -> dict:
