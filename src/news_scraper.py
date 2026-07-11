@@ -357,13 +357,23 @@ async def gather_all_news() -> list[dict]:
     if stale_count:
         print(f"  Filtered out {stale_count} stale articles (older than 7 days)")
 
-    # Deduplicate by title similarity
-    seen_titles = set()
+    # Deduplicate by URL when present, else by the FULL normalized title.
+    # Keying on just the first 50 chars of the title collapsed distinct stories
+    # that happen to share a long common prefix (templated / "Weekly roundup:"
+    # titles), silently dropping the second — sometimes the fresher or
+    # higher-quality copy. Using the URL (exact same link = same article) with a
+    # normalized full-title fallback keeps genuinely different stories. (audit-8 3.D)
+    seen_keys = set()
     unique = []
     for article in fresh:
-        title_key = article["title"].lower()[:50]
-        if title_key not in seen_titles:
-            seen_titles.add(title_key)
+        url = (article.get("link") or "").strip().lower()
+        title_norm = " ".join((article.get("title") or "").split()).lower()
+        key = url or title_norm
+        if not key:
+            unique.append(article)  # no URL and no title — don't collapse these together
+            continue
+        if key not in seen_keys:
+            seen_keys.add(key)
             unique.append(article)
 
     # Sort by recency. `published` is stored in incompatible formats across
