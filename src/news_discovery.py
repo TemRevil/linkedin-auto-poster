@@ -329,23 +329,26 @@ async def discover_news() -> list[dict]:
     return cards
 
 
+def _title_tokens(t: str) -> set:
+    """Significant lowercase word tokens of a title (HTML-stripped, stop words
+    and sub-3-char tokens removed). Shared by clustering and any other
+    title-similarity check so the tokenization stays consistent."""
+    words = re.findall(r"[A-Za-z]{3,}", strip_html(t).lower())
+    return {w for w in words if w not in STOP_WORDS}
+
+
 def _cluster_articles(articles: list[dict]) -> list[dict]:
     """Group near-duplicate articles by title similarity, keep one per cluster.
-    Uses simple Jaccard similarity on title bigrams. Threshold: 0.5 overlap."""
-    def title_tokens(t: str) -> set:
-        words = re.findall(r"[A-Za-z]{3,}", strip_html(t).lower())
-        words = [w for w in words if w not in STOP_WORDS]
-        return set(words)
-
+    Uses simple Jaccard similarity on title tokens. Threshold: 0.5 overlap."""
     clusters: list[list[dict]] = []
     for art in articles:
-        tokens = title_tokens(art.get("title", ""))
+        tokens = _title_tokens(art.get("title", ""))
         if not tokens:
             clusters.append([art])
             continue
         placed = False
         for cluster in clusters:
-            ref_tokens = title_tokens(cluster[0].get("title", ""))
+            ref_tokens = _title_tokens(cluster[0].get("title", ""))
             if not ref_tokens:
                 continue
             jaccard = len(tokens & ref_tokens) / max(len(tokens | ref_tokens), 1)
