@@ -176,7 +176,9 @@ def _pick_from_raw(articles: list[dict], profile: dict, audience: dict) -> dict:
     scored = []
     for article in articles:
         score = 0
-        title_lower = article["title"].lower()
+        # Use .get() like the rest of this function — a raw article missing a
+        # "title" key must not KeyError out of topic selection.
+        title_lower = article.get("title", "").lower()
         summary_lower = strip_html(article.get("summary", "")).lower()
         combined = f"{title_lower} {summary_lower}"
 
@@ -199,7 +201,7 @@ def _pick_from_raw(articles: list[dict], profile: dict, audience: dict) -> dict:
         scored.append((score, article))
 
     scored.sort(key=lambda x: x[0], reverse=True)
-    return scored[0][1] if scored else articles[0]
+    return scored[0][1] if scored else (articles[0] if articles else {})
 
 
 # ─── Claude Code CLI integration ─────────────────────────────────────────────
