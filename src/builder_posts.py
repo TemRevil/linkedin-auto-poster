@@ -94,12 +94,14 @@ def fetch_recent_commits(days: int = 14, force_refresh: bool = False) -> list[di
         return []
 
     # 2) For each repo, get recent commits
+    scanned = 0  # count only the repos we actually query (non-fork, named)
     for repo in repos[:15]:  # Top 15 most recently pushed
         repo_name = repo.get("name", "")
         if not repo_name:
             continue
         if repo.get("fork", False):
             continue  # Skip forks — only original work
+        scanned += 1
         try:
             r = requests.get(
                 f"{GITHUB_API}/repos/{github_user}/{repo_name}/commits",
@@ -133,7 +135,7 @@ def fetch_recent_commits(days: int = 14, force_refresh: bool = False) -> list[di
     # Sort by date desc
     commits.sort(key=lambda c: c.get("date", ""), reverse=True)
     _save_cache({"commits": commits, "user": github_user, "days": days})
-    print(f"[Builder] Fetched {len(commits)} commits across {len(repos)} repos.")
+    print(f"[Builder] Fetched {len(commits)} commits across {scanned} repos.")
     return commits
 
 
