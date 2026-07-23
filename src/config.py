@@ -171,17 +171,22 @@ def get_content_topic() -> str:
     return (get_setting("content_topic", "AI and technology") or "AI and technology").strip()
 
 
+def _clean_str_list(key: str) -> list:
+    """Read a list-valued setting and return its entries as trimmed, non-empty
+    strings. Shared by get_news_feeds / get_search_queries so both treat a
+    misconfigured value (None, blanks, non-strings) the same way."""
+    return [s for s in (str(x).strip() for x in (get_setting(key, []) or [])) if s]
+
+
 def get_news_feeds() -> list:
     """User's custom RSS feeds if set, else the built-in AI/tech feeds."""
-    custom = get_setting("custom_feeds", []) or []
-    custom = [str(u).strip() for u in custom if str(u).strip()]
+    custom = _clean_str_list("custom_feeds")
     return custom if custom else AI_NEWS_FEEDS
 
 
 def get_search_queries() -> list:
     """User's custom web-search queries if set, else queries derived from the topic."""
-    custom = get_setting("custom_search_queries", []) or []
-    custom = [str(q).strip() for q in custom if str(q).strip()]
+    custom = _clean_str_list("custom_search_queries")
     if custom:
         return custom
     topic = get_content_topic()
