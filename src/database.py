@@ -218,6 +218,16 @@ def get_idf_batch(keywords: list[str]) -> dict[str, float]:
 
 # ─── Time-Decayed Keyword Weights ─────────────────────────────────────────────
 
+def _delta_days(swiped_at: str, now: datetime) -> float:
+    """Days between a stored ISO ``swiped_at`` and ``now``; 0.0 when the stored
+    value can't be parsed. Centralizes the parse+guard that the four weight
+    functions below all repeated."""
+    try:
+        return (now - datetime.fromisoformat(swiped_at)).total_seconds() / 86400
+    except (ValueError, TypeError):
+        return 0.0
+
+
 def get_keyword_weight(keyword: str) -> float:
     """Calculate time-decayed weight for a keyword across all swipes.
     W = Σ (sign * IDF * e^(-λ * Δt))
@@ -241,11 +251,7 @@ def get_keyword_weight(keyword: str) -> float:
 
     for row in rows:
         sign = 1.0 if row["action"] == "liked" else -1.0
-        try:
-            swiped_at = datetime.fromisoformat(row["swiped_at"])
-            delta_days = (now - swiped_at).total_seconds() / 86400
-        except (ValueError, TypeError):
-            delta_days = 0
+        delta_days = _delta_days(row["swiped_at"], now)
 
         # W_adjusted = sign * IDF * e^(-λ * Δt)
         weight += sign * idf * math.exp(-DECAY_LAMBDA * delta_days)
@@ -285,11 +291,7 @@ def get_all_keyword_weights() -> dict[str, float]:
         for ev in events:
             # Damped dislike — left-swipe = "not now" not "never again"
             sign = 1.0 if ev["action"] == "liked" else -DISLIKE_DAMPER
-            try:
-                swiped_at = datetime.fromisoformat(ev["swiped_at"])
-                delta_days = (now - swiped_at).total_seconds() / 86400
-            except (ValueError, TypeError):
-                delta_days = 0
+            delta_days = _delta_days(ev["swiped_at"], now)
             w += sign * idf * math.exp(-DECAY_LAMBDA * delta_days)
         weights[kw] = w
 
@@ -361,11 +363,7 @@ def get_source_weight(source: str) -> float:
     weight = 0.0
     for row in rows:
         sign = 1.0 if row["action"] == "liked" else -1.0
-        try:
-            swiped_at = datetime.fromisoformat(row["swiped_at"])
-            delta_days = (now - swiped_at).total_seconds() / 86400
-        except (ValueError, TypeError):
-            delta_days = 0
+        delta_days = _delta_days(row["swiped_at"], now)
         weight += sign * math.exp(-DECAY_LAMBDA * delta_days)
 
     return weight * 2  # Sources weighted 2x
@@ -403,11 +401,7 @@ def get_all_source_weights() -> dict[str, float]:
             else:
                 consecutive_rejects += 1
                 sign = -DISLIKE_DAMPER
-            try:
-                swiped_at = datetime.fromisoformat(ev["swiped_at"])
-                delta_days = (now - swiped_at).total_seconds() / 86400
-            except (ValueError, TypeError):
-                delta_days = 0
+            delta_days = _delta_days(ev["swiped_at"], now)
             w += sign * math.exp(-DECAY_LAMBDA * delta_days)
 
         # Hard penalty for sources with N consecutive recent rejects
