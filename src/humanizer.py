@@ -62,6 +62,28 @@ def detect_ai_patterns(text: str) -> list[dict]:
     return findings
 
 
+def _reduce_em_dashes(text: str) -> str:
+    """Keep the first em-dash, replace each later one with ". " so a tight dash
+    like "context—aware" becomes "context. aware" rather than the run-together
+    "context.aware". No-op when there are 0 or 1 em-dashes. Any double space
+    created around an already-spaced em-dash is normalized by humanize_text's
+    later `re.sub(r"  +", " ", ...)`. (audit-7 3.A)"""
+    if text.count("—") <= 1:
+        return text
+    first_found = False
+    out = []
+    for ch in text:
+        if ch == "—":
+            if not first_found:
+                out.append(ch)
+                first_found = True
+            else:
+                out.append(". ")
+        else:
+            out.append(ch)
+    return "".join(out)
+
+
 def humanize_text(text: str) -> str:
     """Apply humanization rules to clean AI-isms from text."""
     result = text
@@ -79,26 +101,7 @@ def humanize_text(text: str) -> str:
         result = re.sub(pattern, replacement, result, flags=re.IGNORECASE)
 
     # Reduce em dashes
-    dash_count = result.count("—")
-    if dash_count > 1:
-        # Keep first, replace rest with periods or commas
-        first_found = False
-        new_result = []
-        for char in result:
-            if char == "—":
-                if not first_found:
-                    new_result.append(char)
-                    first_found = True
-                else:
-                    # Insert ". " (not a bare ".") so a tight em-dash like
-                    # "context—aware" becomes "context. aware" instead of the
-                    # run-together "context.aware". Any double space this creates
-                    # around an already-spaced em-dash is collapsed by the
-                    # `re.sub(r"  +", " ", result)` normalization below. (audit-7 3.A)
-                    new_result.append(". ")
-            else:
-                new_result.append(char)
-        result = "".join(new_result)
+    result = _reduce_em_dashes(result)
 
     # Remove double+ exclamation marks
     result = re.sub(r"!{2,}", "!", result)
