@@ -135,10 +135,16 @@ def _card_to_article(card: dict) -> dict:
     }
 
 
+def _audience_top_words(audience: dict, n: int = 15) -> list[str]:
+    """Top network keywords from audience insights. Skips malformed entries so a
+    top_titles row missing its "word" key can't KeyError the caller."""
+    return [t["word"] for t in audience.get("top_titles", [])[:n] if t.get("word")]
+
+
 def _rank_by_audience(cards: list[dict], audience: dict) -> dict:
     """Rank cards by audience alignment, return single best."""
     breakdown = audience.get("breakdown", {})
-    audience_keywords = [t["word"] for t in audience.get("top_titles", [])[:15]]
+    audience_keywords = _audience_top_words(audience)
 
     scored = []
     for card in cards:
@@ -170,7 +176,7 @@ def _rank_by_audience(cards: list[dict], audience: dict) -> dict:
 
 def _pick_from_raw(articles: list[dict], profile: dict, audience: dict) -> dict:
     """Final fallback: pick from raw scraped articles."""
-    audience_keywords = [t["word"] for t in audience.get("top_titles", [])[:15]]
+    audience_keywords = _audience_top_words(audience)
     interests_text = profile.get("my_interests", "").lower()
 
     scored = []
