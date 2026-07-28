@@ -797,7 +797,7 @@ def api_sessions():
 def api_sessions_login():
     """Create a new (empty) session entry.
     The user must then click 'Login' on that entry to authenticate."""
-    data = request.get_json()
+    data = request.get_json(silent=True) or {}
     stype = data.get("type", "linkedin")
     name = data.get("name", "Untitled").strip() or "Untitled"
 
@@ -854,7 +854,7 @@ _login_progress = {}  # {filename: {"status": "in_progress"|"done"|"error", "sta
 @app.route("/api/sessions/authenticate", methods=["POST"])
 def api_sessions_authenticate():
     """Trigger the login/OAuth flow for an EXISTING session entry."""
-    data = request.get_json()
+    data = request.get_json(silent=True) or {}
     stype = data.get("type", "linkedin")
     sid = data.get("id")
     config = _load_sessions_config()
@@ -1086,7 +1086,7 @@ def _do_linkedin_login(filename: str):
 
 @app.route("/api/sessions/remove", methods=["POST"])
 def api_sessions_remove():
-    data = request.get_json()
+    data = request.get_json(silent=True) or {}
     stype = data.get("type", "linkedin")
     sid = data.get("id")
 
@@ -1116,7 +1116,7 @@ def api_sessions_remove():
 
 @app.route("/api/sessions/rename", methods=["POST"])
 def api_sessions_rename():
-    data = request.get_json()
+    data = request.get_json(silent=True) or {}
     stype = data.get("type", "linkedin")
     sid = data.get("id")
     new_name = data.get("name", "").strip()
@@ -1136,7 +1136,7 @@ def api_sessions_rename():
 
 @app.route("/api/sessions/activate", methods=["POST"])
 def api_sessions_activate():
-    data = request.get_json()
+    data = request.get_json(silent=True) or {}
     stype = data.get("type", "linkedin")
     sid = data.get("id")
 
@@ -1888,7 +1888,7 @@ def api_regenerate():
     """Regenerate a draft with a mode: shorter, longer, regenerate.
     Body: { id, mode: "shorter"|"longer"|"regenerate" }"""
     global _generate_running, _generate_result, _generate_steps
-    data = request.get_json()
+    data = request.get_json(silent=True) or {}
     draft_id = data.get("id")
     mode = data.get("mode", "regenerate")
 
