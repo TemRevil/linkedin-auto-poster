@@ -168,3 +168,17 @@ Your connections are scraped to `connections.toml` and analyzed into
 recruiters, founders, students) plus the top keywords across your network.
 The post generator uses this so topics skew toward what your audience cares
 about. Nothing here is shared — both files are gitignored.
+
+## Testing
+
+Unit tests live in `tests/` and run on the standard library (no `pytest`
+needed). They cover the pure/importable modules — humanizer, hashtag and
+image-query generation, the SQLite swipe/preference layer, news text helpers,
+connection cleaning, config, and the Gmail preference signal — and isolate all
+state to temp directories.
+
+```bash
+python -m unittest discover -s tests -v
+```
+
+See [`tests/README.md`](tests/README.md) for the full coverage map.
