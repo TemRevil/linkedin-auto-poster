@@ -37,24 +37,41 @@ def _get_active_gmail_session_file() -> Path:
     return AUTH_DIR / "gmail_token.json"
 
 
+def _articles_from_feed(feed_url: str, limit: int, atype: str,
+                        summary_len: int = 500, enrich=None) -> list[dict]:
+    """Parse one feed and return up to ``limit`` article dicts tagged ``atype``.
+
+    Shared by scrape_rss_feeds and scrape_research_feeds so both build articles
+    the same way and both catch per-feed errors. ``enrich(entry, summary) ->
+    summary`` optionally rewrites the (already truncated) summary — research
+    feeds use it to prepend author names. ``entry.get("summary")`` is coerced
+    with ``or ""`` so a feed that yields a None summary can't raise.
+    """
+    out = []
+    try:
+        feed = feedparser.parse(feed_url)
+        for entry in feed.entries[:limit]:
+            summary = (entry.get("summary") or "")[:summary_len]
+            if enrich is not None:
+                summary = enrich(entry, summary)
+            out.append({
+                "title": entry.get("title", ""),
+                "summary": summary,
+                "link": entry.get("link", ""),
+                "source": feed.feed.get("title", feed_url),
+                "published": entry.get("published", ""),
+                "type": atype,
+            })
+    except Exception as e:
+        print(f"  [{atype} feed error] {feed_url}: {e}")
+    return out
+
+
 def scrape_rss_feeds() -> list[dict]:
     """Pull latest news from the configured RSS feeds (user topic or AI default)."""
     articles = []
     for feed_url in get_news_feeds():
-        try:
-            feed = feedparser.parse(feed_url)
-            for entry in feed.entries[:5]:
-                published = entry.get("published", "")
-                articles.append({
-                    "title": entry.get("title", ""),
-                    "summary": entry.get("summary", "")[:500],
-                    "link": entry.get("link", ""),
-                    "source": feed.feed.get("title", feed_url),
-                    "published": published,
-                    "type": "rss"
-                })
-        except Exception as e:
-            print(f"  [RSS Error] {feed_url}: {e}")
+        articles += _articles_from_feed(feed_url, 5, "rss", summary_len=500)
     return articles
 
 
@@ -63,31 +80,20 @@ def scrape_research_feeds() -> list[dict]:
     Tagged with type='research' for the RESEARCH badge in UI."""
     if not get_setting("use_research_feeds", True):
         return []
+
+    def _add_authors(entry, summary):
+        # arXiv entries have author info worth surfacing
+        authors = ""
+        if hasattr(entry, "authors"):
+            authors = ", ".join(a.get("name", "") for a in entry.authors[:3])
+        elif hasattr(entry, "author"):
+            authors = entry.author
+        return f"By {authors}. {summary}" if authors else summary
+
     articles = []
     for feed_url in RESEARCH_FEEDS:
-        try:
-            feed = feedparser.parse(feed_url)
-            for entry in feed.entries[:4]:
-                published = entry.get("published", "")
-                # arXiv entries have author info worth surfacing
-                authors = ""
-                if hasattr(entry, "authors"):
-                    authors = ", ".join(a.get("name", "") for a in entry.authors[:3])
-                elif hasattr(entry, "author"):
-                    authors = entry.author
-                summary = entry.get("summary", "")[:600]
-                if authors:
-                    summary = f"By {authors}. {summary}"
-                articles.append({
-                    "title": entry.get("title", ""),
-                    "summary": summary,
-                    "link": entry.get("link", ""),
-                    "source": feed.feed.get("title", feed_url),
-                    "published": published,
-                    "type": "research"
-                })
-        except Exception as e:
-            print(f"  [Research Error] {feed_url}: {e}")
+        articles += _articles_from_feed(feed_url, 4, "research",
+                                        summary_len=600, enrich=_add_authors)
     return articles
 
 
