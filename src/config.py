@@ -175,7 +175,7 @@ def _clean_str_list(key: str) -> list:
     """Read a list-valued setting and return its entries as trimmed, non-empty
     strings. Shared by get_news_feeds / get_search_queries so both treat a
     misconfigured value (None, blanks, non-strings) the same way."""
-    return [s for s in (str(x).strip() for x in (get_setting(key, []) or [])) if s]
+    return [s for s in (str(x).strip() for x in (get_setting(key, []) or []) if x is not None) if s]
 
 
 def get_news_feeds() -> list:
