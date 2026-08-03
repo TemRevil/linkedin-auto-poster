@@ -94,10 +94,12 @@ def clean_headline(raw_headline: str, raw_name: str, raw_location: str) -> str:
                 return raw_location
         return ""
 
-    # If headline is just the person's name (or name + mutual text), it's useless
+    # If the headline IS exactly the name, it's useless — discard. (Don't
+    # discard on a mere startswith: the common LinkedIn "Name | Title" /
+    # "Name - Title" shape starts with the name but carries a real title, which
+    # the name-prefix strip below recovers.)
     clean_n = clean_name(raw_name)
-    if raw_headline.startswith(clean_n) or raw_headline == raw_name:
-        # Headline is just repeated name + degree marker — discard
+    if raw_headline == raw_name:
         return ""
 
     # If headline contains mutual connection text, it's garbage

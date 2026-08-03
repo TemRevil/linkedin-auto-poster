@@ -34,6 +34,16 @@ class CleanHeadlineTests(unittest.TestCase):
         # When headline is empty but the location field holds a job title.
         self.assertEqual(clean_headline("", "Ahmed", "Backend Engineer"), "Backend Engineer")
 
+    def test_name_pipe_title_keeps_the_title(self):
+        # "Name | Title" / "Name - Title" must not be discarded as just-the-name.
+        self.assertEqual(
+            clean_headline("Ahmed Ali | Senior Developer", "Ahmed Ali", "Cairo"),
+            "Senior Developer",
+        )
+
+    def test_headline_equal_to_name_is_discarded(self):
+        self.assertEqual(clean_headline("Ahmed Ali", "Ahmed Ali", "Cairo"), "")
+
 
 class CleanLocationTests(unittest.TestCase):
     def test_real_location_kept(self):
