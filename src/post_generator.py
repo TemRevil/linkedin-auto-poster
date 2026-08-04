@@ -232,10 +232,12 @@ def _build_audience_summary() -> str:
         f"{cat} ({pct}%)" for cat, pct in top_cats
     )
 
-    top_kw = audience.get("top_titles", [])[:10]
+    # Skip malformed rows (missing 'word') and default a missing 'count' rather
+    # than KeyError-ing out of the whole prompt build on a sparse insights file.
+    top_kw = [t for t in audience.get("top_titles", [])[:10] if t.get("word")]
     if top_kw:
         summary += "\nTop topics your connections post about: "
-        summary += ", ".join(f"{t['word']} ({t['count']}x)" for t in top_kw)
+        summary += ", ".join(f"{t['word']} ({t.get('count', 0)}x)" for t in top_kw)
 
     return summary
 
@@ -268,10 +270,11 @@ def _build_audience_hook_segments() -> str:
         headline_str = "; ".join(headlines) if headlines else "N/A"
         lines.append(f"- {label} ({pct}%, {count} people): {headline_str}")
 
-    # Top keywords for context
-    top_kw = audience.get("top_titles", [])[:10]
+    # Top keywords for context (reuses the audit9 helper, which skips rows
+    # missing 'word').
+    top_kw = _audience_top_words(audience, 10)
     if top_kw:
-        lines.append(f"\nTop network keywords: {', '.join(t['word'] for t in top_kw)}")
+        lines.append(f"\nTop network keywords: {', '.join(top_kw)}")
 
     return "\n".join(lines) if lines else "(No segment data available.)"
 
