@@ -168,9 +168,15 @@ def cmd_status():
     conn_file = Path(__file__).resolve().parent.parent / "connections.json"
     if conn_file.exists():
         import json
-        with open(conn_file, "r", encoding="utf-8") as f:
-            conns = json.load(f)
-        print(f"  Connections scraped: {len(conns)}")
+        # Guard like the drafts/gmail reads below — a corrupt or non-list
+        # connections.json must not crash `python run.py status`. TypeError
+        # covers len() on a bare number/None.
+        try:
+            with open(conn_file, "r", encoding="utf-8") as f:
+                conns = json.load(f)
+            print(f"  Connections scraped: {len(conns)}")
+        except (json.JSONDecodeError, OSError, TypeError):
+            print("  Connections scraped: (unreadable connections.json)")
     else:
         print(f"  Connections scraped: Not yet")
 
