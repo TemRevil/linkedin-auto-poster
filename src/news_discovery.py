@@ -236,14 +236,7 @@ async def discover_news() -> list[dict]:
     gmail_prefs = _extract_gmail_preferences()
     # Same rationale for audience insights: the file is identical for every
     # card, so parse it once instead of re-opening it inside _calculate_score.
-    audience_insights = None
-    _insights_file = BASE_DIR / "audience_insights.json"
-    if _insights_file.exists():
-        try:
-            with open(_insights_file, "r", encoding="utf-8") as f:
-                audience_insights = json.load(f)
-        except Exception:
-            audience_insights = None
+    audience_insights = _load_audience_insights()
     # Memoize source-quality lookups so each distinct source hits the DB once
     # per run instead of once per article.
     source_quality_cache: dict = {}
@@ -367,6 +360,21 @@ def _cluster_articles(articles: list[dict]) -> list[dict]:
     return result
 
 
+def _load_audience_insights() -> dict | None:
+    """Read audience_insights.json from BASE_DIR. Returns the parsed dict, or
+    None when the file is missing or unreadable. Centralizes the exists/open/
+    json.load/None-on-error block that discover_news and _calculate_score
+    both duplicated."""
+    insights_file = BASE_DIR / "audience_insights.json"
+    if not insights_file.exists():
+        return None
+    try:
+        with open(insights_file, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return None
+
+
 def _calculate_score(keywords: list, source: str, article_type: str,
                      kw_weights: dict, src_weights: dict,
                      interests: list, blacklist: list,
@@ -419,13 +427,7 @@ def _calculate_score(keywords: list, source: str, article_type: str,
     # Parsed once per discovery run and passed in; fall back to a fresh read
     # for any standalone caller that doesn't supply it.
     if audience_insights is None:
-        insights_file = BASE_DIR / "audience_insights.json"
-        if insights_file.exists():
-            try:
-                with open(insights_file, "r", encoding="utf-8") as f:
-                    audience_insights = json.load(f)
-            except Exception:
-                audience_insights = None
+        audience_insights = _load_audience_insights()
     if audience_insights:
         try:
             insights = audience_insights
