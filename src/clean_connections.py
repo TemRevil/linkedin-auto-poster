@@ -151,19 +151,29 @@ def is_junk_location(text: str) -> bool:
     return any(re.search(p, text) for p in junk_patterns)
 
 
+# Job-title markers, matched as whole words. Plain substring matching flagged
+# real locations as headlines and dropped them: "Bahrain" and "Christchurch"
+# both contain "hr", "Leadville" contains "lead", "Rabat " contains "at ".
+# Inflections a bare word-boundary match would miss are listed explicitly.
+_HEADLINE_WORD_MARKERS = [
+    "developer", "engineer", "engineering", "designer", "manager", "founder",
+    "student", "intern", "internship", "ceo", "cto", "lead", "leader",
+    "senior", "software", "frontend", "backend", "fullstack", "data",
+    "analyst", "recruiter", "hr", "marketing", "product",
+    "director", "head of", "specialist", "coordinator",
+    "supervisor", "officer", "freelance", "consultant",
+    "at", "aspiring", "passionate",
+]
+_HEADLINE_MARKER_RE = re.compile(
+    r"\b(?:" + "|".join(re.escape(m) for m in _HEADLINE_WORD_MARKERS) + r")\b"
+)
+
+
 def looks_like_headline(text: str) -> bool:
     """Check if text looks like a job headline rather than location."""
-    headline_markers = [
-        "developer", "engineer", "designer", "manager", "founder",
-        "student", "intern", "ceo", "cto", "lead", "senior",
-        "software", "frontend", "backend", "fullstack", "data",
-        "analyst", "recruiter", "hr", "marketing", "product",
-        "director", "head of", "specialist", "coordinator",
-        "supervisor", "officer", "freelance", "consultant",
-        "at ", "| ", "aspiring", "passionate",
-    ]
-    lower = text.lower()
-    return any(marker in lower for marker in headline_markers)
+    lower = (text or "").lower()
+    # "|" stays a substring check: it is punctuation, not a word.
+    return "| " in lower or bool(_HEADLINE_MARKER_RE.search(lower))
 
 
 def extract_headline_from_name_blob(raw_name: str) -> str:
