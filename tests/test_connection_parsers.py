@@ -14,6 +14,23 @@ class LooksLikeHeadlineTests(unittest.TestCase):
     def test_plain_location_is_not_headline(self):
         self.assertFalse(looks_like_headline("Cairo, Egypt"))
 
+    def test_markers_embedded_in_place_names_do_not_match(self):
+        # Substring matching used to flag these: "hr" inside Bahrain and
+        # Christchurch, "lead" inside Leadville, "at " inside "Rabat ".
+        for place in ("Manama, Bahrain", "Christchurch, New Zealand",
+                      "Leadville, Colorado", "Rabat, Morocco"):
+            with self.subTest(place=place):
+                self.assertFalse(looks_like_headline(place))
+
+    def test_markers_as_whole_words_still_match(self):
+        for headline in ("HR Specialist", "Data Analyst", "Team Leader at Acme",
+                         "Internship at Google", "Software Engineer | React"):
+            with self.subTest(headline=headline):
+                self.assertTrue(looks_like_headline(headline))
+
+    def test_empty_text_is_not_headline(self):
+        self.assertFalse(looks_like_headline(""))
+
 
 class IsJunkLocationTests(unittest.TestCase):
     def test_message_marker_is_junk(self):
