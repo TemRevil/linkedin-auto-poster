@@ -14,6 +14,7 @@ import time
 import webbrowser
 from datetime import datetime
 from pathlib import Path
+from urllib.parse import urlparse
 from flask import Flask, render_template, request, jsonify, abort
 
 from config import (
@@ -35,6 +36,17 @@ _DRAFT_ID_RE = re.compile(r"\A\d{8}_\d{6}\Z")
 _CSRF_ALLOWED_ORIGINS = {"http://127.0.0.1:5555", "http://localhost:5555"}
 
 
+def _referer_origin(referer: str) -> str:
+    """scheme://host:port of a Referer URL, or "" if it has no usable origin."""
+    try:
+        parts = urlparse(referer)
+    except ValueError:
+        return ""
+    if not parts.scheme or not parts.netloc:
+        return ""
+    return f"{parts.scheme}://{parts.netloc}"
+
+
 @app.before_request
 def _check_origin():
     if request.method in ("POST", "PUT", "DELETE", "PATCH"):
@@ -42,7 +54,10 @@ def _check_origin():
         referer = request.headers.get("Referer", "")
         if origin and origin not in _CSRF_ALLOWED_ORIGINS:
             abort(403)
-        if not origin and not any(referer.startswith(a) for a in _CSRF_ALLOWED_ORIGINS):
+        # Compare the parsed origin, not a string prefix: startswith() let
+        # http://127.0.0.1:5555.evil.com/ through, since it literally starts
+        # with the allowed origin.
+        if not origin and _referer_origin(referer) not in _CSRF_ALLOWED_ORIGINS:
             abort(403)
 
 
