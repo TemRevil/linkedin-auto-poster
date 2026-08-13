@@ -403,12 +403,17 @@ def _archive_draft_images(draft: dict) -> int:
     if not draft:
         return 0
     images_dir = (POSTS_DIR / "images").resolve()
-    rejected_dir = POSTS_DIR / "images" / "rejected"
+    rejected_dir = (POSTS_DIR / "images" / "rejected").resolve()
     moved = 0
     for p in draft_images(draft):
         try:
             src = Path(p).resolve()
-            if not str(src).startswith(str(images_dir)):
+            # Path containment, not string prefix: startswith() also accepted
+            # sibling directories like posts/images_backup/.
+            if not src.is_relative_to(images_dir):
+                continue
+            # Already archived — moving it onto itself raises shutil.Error.
+            if src.is_relative_to(rejected_dir):
                 continue
             if src.exists():
                 rejected_dir.mkdir(parents=True, exist_ok=True)
