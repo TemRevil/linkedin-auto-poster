@@ -250,7 +250,10 @@ def get_keyword_weight(keyword: str) -> float:
     weight = 0.0
 
     for row in rows:
-        sign = 1.0 if row["action"] == "liked" else -1.0
+        # Damped dislike, matching get_all_keyword_weights. A hard -1.0 here
+        # made this function disagree with the batch path for the same keyword,
+        # so a caller's score depended on which one it happened to call.
+        sign = 1.0 if row["action"] == "liked" else -DISLIKE_DAMPER
         delta_days = _delta_days(row["swiped_at"], now)
 
         # W_adjusted = sign * IDF * e^(-λ * Δt)
@@ -361,10 +364,21 @@ def get_source_weight(source: str) -> float:
 
     now = datetime.now()
     weight = 0.0
-    for row in rows:
-        sign = 1.0 if row["action"] == "liked" else -1.0
+    consecutive_rejects = 0
+    # Same math as get_all_source_weights (damped dislikes + the consecutive
+    # reject penalty), so a single-source lookup and the batch map agree.
+    for row in sorted(rows, key=lambda r: r["swiped_at"]):
+        if row["action"] == "liked":
+            consecutive_rejects = 0
+            sign = 1.0
+        else:
+            consecutive_rejects += 1
+            sign = -DISLIKE_DAMPER
         delta_days = _delta_days(row["swiped_at"], now)
         weight += sign * math.exp(-DECAY_LAMBDA * delta_days)
+
+    if consecutive_rejects >= SOURCE_REJECT_THRESHOLD:
+        weight -= 2.0
 
     return weight * 2  # Sources weighted 2x
 
