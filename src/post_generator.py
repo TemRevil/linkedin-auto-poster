@@ -81,11 +81,19 @@ def load_profile() -> dict:
 
 
 def load_audience_insights() -> dict:
-    """Load audience analysis data from connections scrape."""
+    """Load audience analysis data from connections scrape. A corrupt or
+    non-dict file degrades to "no insights" — pick_best_topic runs off this and
+    must not die because a half-written analysis file is on disk. Mirrors
+    news_discovery._load_audience_insights."""
     if not AUDIENCE_FILE.exists():
         return {}
-    with open(AUDIENCE_FILE, "r", encoding="utf-8") as f:
-        return json.load(f)
+    try:
+        with open(AUDIENCE_FILE, "r", encoding="utf-8") as f:
+            data = json.load(f)
+    except (json.JSONDecodeError, OSError) as e:
+        print(f"[Generator] Ignoring unreadable {AUDIENCE_FILE.name}: {e}")
+        return {}
+    return data if isinstance(data, dict) else {}
 
 
 # ─── Article Selection ───────────────────────────────────────────────────────
