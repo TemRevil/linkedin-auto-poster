@@ -10,6 +10,7 @@ import feedparser
 import requests
 from datetime import datetime, timedelta
 from pathlib import Path
+from urllib.parse import quote_plus
 from bs4 import BeautifulSoup
 from playwright.async_api import async_playwright
 
@@ -136,8 +137,11 @@ def scrape_ddg_news() -> list[dict]:
                             continue
                         seen_urls.add(url)
                         articles.append({
-                            "title": r.get("title", ""),
-                            "summary": r.get("body", "")[:500],
+                            "title": r.get("title") or "",
+                            # `or ""` not a .get default — DDG returns an
+                            # explicit null body on some results, and None[:500]
+                            # would abort the whole query's batch.
+                            "summary": (r.get("body") or "")[:500],
                             "link": url,
                             "source": r.get("source", "DuckDuckGo News"),
                             "published": r.get("date", datetime.now().isoformat()),
@@ -220,7 +224,12 @@ async def scrape_web_search() -> list[dict]:
 
             for query in get_search_queries()[:2]:
                 try:
-                    search_url = f"https://www.google.com/search?q={query}&tbm=nws"
+                    # Percent-encode: topic-derived queries carry spaces, and an
+                    # "&" or "#" in the topic silently truncated the search term.
+                    search_url = (
+                        "https://www.google.com/search"
+                        f"?q={quote_plus(query)}&tbm=nws"
+                    )
                     await page.goto(search_url, wait_until="domcontentloaded")
                     await page.wait_for_timeout(2000)
 
