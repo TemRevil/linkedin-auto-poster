@@ -17,6 +17,11 @@ import requests
 from config import BASE_DIR, get_setting
 
 GITHUB_API = "https://api.github.com"
+
+# Commits not worth turning into a post. Anchored with a word boundary: the
+# old startswith("wip") also swallowed real work like "wipe stale cache",
+# and startswith("merge ") missed the conventional-commit "merge(deps): ...".
+_SKIP_COMMIT_RE = re.compile(r"^(?:merge|wip)\b", re.IGNORECASE)
 CACHE_FILE = BASE_DIR / "_github_cache.json"
 CACHE_TTL_SECONDS = 1800  # 30 min — don't hammer the API
 
@@ -115,7 +120,7 @@ def fetch_recent_commits(days: int = 14, force_refresh: bool = False) -> list[di
                 msg = c.get("commit", {}).get("message", "")
                 first_line = msg.split("\n", 1)[0].strip()
                 # Skip merge commits and trivial automation
-                if first_line.lower().startswith(("merge ", "merge:", "wip", "wip:")):
+                if _SKIP_COMMIT_RE.match(first_line):
                     continue
                 date = c.get("commit", {}).get("author", {}).get("date", "")
                 commits.append({
