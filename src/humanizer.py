@@ -7,6 +7,27 @@ Implements the 29 AI-writing pattern detection and removal.
 import re
 from typing import List, Tuple
 
+# Openers to strip from the start of a line. Detection and removal both build
+# their regex from this one list — they used to be written out separately, so
+# "Certainly" and "Of course" were reported by detect_ai_patterns forever while
+# humanize_text had no rule that removed them. Longest phrase first so the
+# alternation consumes "That's a great point" rather than stopping at
+# "That's a great" and leaving a dangling "point.".
+SYCOPHANTIC_OPENERS = [
+    "That's a great question",
+    "That's a great point",
+    "That's a great",
+    "Great question",
+    "Absolutely",
+    "Certainly",
+    "Of course",
+]
+_SYCO_ALT = "|".join(re.escape(o) for o in SYCOPHANTIC_OPENERS)
+# The opener must close with punctuation to count. Without it, "Absolutely no
+# regressions this week" reads as an ordinary sentence, not a preamble.
+_SYCO_RE = re.compile(rf"^({_SYCO_ALT})\s*([.!?,]+)\s*",
+                      re.MULTILINE | re.IGNORECASE)
+
 # AI-isms to detect and fix
 AI_PATTERNS: List[Tuple[str, str, str]] = [
     # (pattern_name, regex_or_keyword, fix_description)
@@ -17,7 +38,7 @@ AI_PATTERNS: List[Tuple[str, str, str]] = [
     ("em_dash_overuse", r"—", "Use period or comma instead"),
     ("colon_intro", r":\s*\n", "Rewrite as flowing sentence"),
     ("passive_voice", r"\b(is being|was being|has been|have been|will be|is considered|is regarded)\b", "Rewrite in active voice"),
-    ("sycophantic_opener", r"^(Great question|That's a great|Absolutely|Certainly|Of course)\b", "Start with substance"),
+    ("sycophantic_opener", _SYCO_RE.pattern, "Start with substance"),
     ("hedge_stacking", r"\b(it seems|perhaps|might|could potentially|it appears)\b", "Commit to the claim or remove"),
     ("list_dependency", r"^\s*[-•]\s", "Convert to flowing prose when possible"),
     ("bold_overuse", r"\*\*[^*]+\*\*", "Use bold sparingly, max 1-2 per post"),
@@ -114,10 +135,8 @@ def humanize_text(text: str) -> str:
     for filler in filler_starts:
         result = result.replace(filler, "")
 
-    # Remove sycophantic openers
-    syco_patterns = [r"^Great question[.!]?\s*", r"^That's a great point[.!]?\s*", r"^Absolutely[.!]?\s*"]
-    for pattern in syco_patterns:
-        result = re.sub(pattern, "", result, flags=re.MULTILINE)
+    # Remove sycophantic openers, plus the punctuation and space that follow.
+    result = _SYCO_RE.sub("", result)
 
     # Clean up double spaces and empty lines
     result = re.sub(r"  +", " ", result)
