@@ -334,6 +334,17 @@ async def scrape_connections(session_file=None):
     return connections
 
 
+def _kw_pattern(word: str) -> str:
+    """Regex for one category keyword, anchored on word boundaries only where
+    the keyword actually starts/ends with a word character. Anchoring blindly
+    would break the punctuation-led entries: "\\b" before the "." of ".net"
+    never matches, because a space followed by "." is not a word boundary."""
+    esc = re.escape(word)
+    left = r"\b" if word[:1].isalnum() else ""
+    right = r"\b" if word[-1:].isalnum() else ""
+    return f"{left}{esc}{right}"
+
+
 def analyze_audience(connections=None):
     if connections is None:
         # Prefer JSON (more reliable on Windows; TOML can fail on Arabic chars)
@@ -399,6 +410,17 @@ def analyze_audience(connections=None):
         r"\b(?:ai|ml|data|machine\s*learning|artificial\s*intelligence|"
         r"analyst|scientist|nlp|deep\s*learning)\b"
     )
+    # Every other bucket needs the same word-boundary treatment data_ai already
+    # got. Plain `w in h` matched keywords buried inside ordinary words, and
+    # since first-match wins the mislabel is permanent: "ui" hides in
+    # "building", so "Full Stack Developer building web apps" was filed under
+    # designers, and "hr" hides in "Bahrain", so "Backend Engineer at Bahrain
+    # Tech" was filed under recruiters. Those wrong counts land in
+    # audience_insights.json and then steer article scoring.
+    cat_res = {c: re.compile("|".join(_kw_pattern(w) for w in words))
+               for c, words in kw.items()}
+    cat_res["data_ai"] = data_ai_re
+
     # First-match wins, so check the most specific buckets BEFORE the broad
     # "developers" bucket. Otherwise a "Data Engineer" / "ML Engineer" headline
     # matches the generic "engineer" keyword and is claimed by developers before
@@ -411,11 +433,7 @@ def analyze_audience(connections=None):
         h = c.get("headline", "").lower()
         found = False
         for cat in priority:
-            if cat == "data_ai":
-                matched = bool(data_ai_re.search(h))
-            else:
-                matched = any(w in h for w in kw[cat])
-            if matched:
+            if cat_res[cat].search(h):
                 cats[cat].append(c)
                 found = True
                 break
