@@ -432,18 +432,29 @@ def _calculate_score(keywords: list, source: str, article_type: str,
         try:
             insights = audience_insights
 
-            audience_kws = {t["word"].lower() for t in insights.get("top_titles", [])[:20]}
+            # Skip malformed rows instead of subscripting. A single top_titles
+            # entry without a "word" key used to raise straight past both loops
+            # into the blanket except below, so the whole audience contribution
+            # — headline boosts included — was silently dropped for every card.
+            # Mirrors post_generator._audience_top_words.
+            audience_kws = {
+                t["word"].lower()
+                for t in insights.get("top_titles", [])[:20]
+                if isinstance(t, dict) and isinstance(t.get("word"), str) and t["word"]
+            }
             for kw in keywords:
                 if kw.lower() in audience_kws:
                     score += 0.5
 
             breakdown = insights.get("breakdown", {})
             for cat, info in breakdown.items():
-                if cat == "other":
+                if cat == "other" or not isinstance(info, dict):
                     continue
-                pct = info.get("percentage", 0)
+                # `or 0` not a .get default — a null percentage would raise on
+                # the ** below and lose the rest of the breakdown.
+                pct = info.get("percentage") or 0
                 cat_weight = max(0.2, (pct ** 0.5) * 0.1)
-                for headline in info.get("sample_headlines", []):
+                for headline in info.get("sample_headlines") or []:
                     headline_words = set(re.findall(r"\w+", strip_html(headline).lower()))
                     for kw in keywords:
                         if kw.lower() in headline_words:
