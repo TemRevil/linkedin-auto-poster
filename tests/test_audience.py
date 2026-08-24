@@ -80,6 +80,28 @@ class AudienceCategoryTests(unittest.TestCase):
         self.assertEqual(self.classify("Passionate about hiking and coffee"), "other")
 
 
+class SafePrintTests(unittest.TestCase):
+    class _Cp1252Stdout(io.StringIO):
+        """Stand-in for a Windows console that cannot render non-latin text."""
+        encoding = "cp1252"
+
+        def write(self, s):
+            s.encode("cp1252")  # raises UnicodeEncodeError like the real console
+            return super().write(s)
+
+    def test_unrenderable_text_does_not_raise(self):
+        out = self._Cp1252Stdout()
+        with redirect_stdout(out):
+            cs._safe_print("    القاهرة: 12x")
+        self.assertIn("12x", out.getvalue())
+
+    def test_plain_text_is_printed_verbatim(self):
+        out = io.StringIO()
+        with redirect_stdout(out):
+            cs._safe_print("    cairo: 12x")
+        self.assertEqual(out.getvalue().strip(), "cairo: 12x")
+
+
 class AudienceScoreResilienceTests(unittest.TestCase):
     BREAKDOWN = {"developers": {"percentage": 40,
                                 "sample_headlines": ["Senior React engineer"]}}

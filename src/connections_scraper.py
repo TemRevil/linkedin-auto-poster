@@ -334,6 +334,24 @@ async def scrape_connections(session_file=None):
     return connections
 
 
+def _safe_print(text: str) -> None:
+    """print() that survives a console whose encoding can't represent the text.
+
+    The audience report echoes raw connection data — Arabic locations and job
+    titles. On a default Windows console (cp1252) that raised
+    UnicodeEncodeError partway through the report, and since the report runs
+    BEFORE the save, analyze_audience died without ever writing
+    audience_insights.json: the whole analysis was computed and thrown away.
+    A display limitation must not cost the result, so characters the console
+    cannot render degrade to a replacement character instead.
+    """
+    try:
+        print(text)
+    except UnicodeEncodeError:
+        enc = sys.stdout.encoding or "ascii"
+        print(text.encode(enc, errors="replace").decode(enc, errors="replace"))
+
+
 def _kw_pattern(word: str) -> str:
     """Regex for one category keyword, anchored on word boundaries only where
     the keyword actually starts/ends with a word character. Anchoring blindly
@@ -582,7 +600,8 @@ def analyze_audience(connections=None):
     insights["top_titles"] = [{"word": w, "count": c} for w, c in top]
 
     print(f"\n  Top keywords (from {source_label}):")
-    [print(f"    {w}: {c}x") for w, c in top[:10]]
+    for w, c in top[:10]:
+        _safe_print(f"    {w}: {c}x")
 
     dp = insights["breakdown"].get("developers", {}).get("percentage", 0)
     if dp > 40:
@@ -604,7 +623,8 @@ def analyze_audience(connections=None):
 
     if top_locs:
         print(f"\n  Top locations:")
-        [print(f"    {loc}: {cnt}x") for loc, cnt in top_locs[:5]]
+        for loc, cnt in top_locs[:5]:
+            _safe_print(f"    {loc}: {cnt}x")
 
     tmp = CONNECTIONS_SUMMARY_FILE.with_suffix(".tmp")
     with open(tmp, "w", encoding="utf-8") as f:
